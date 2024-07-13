@@ -1,0 +1,39 @@
+/* CalendarComponent.css */
+.react-calendar {
+    width: 100%;
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.react-calendar__tile {
+    height: 50px;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.3s ease;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+    background-color: #e2e8f0;
+}
+
+.react-calendar__tile--now {
+    background: #4299e1;
+    color: white;
+    border-radius: 0.25rem;
+}
+
+.react-calendar__tile--now:enabled:hover,
+.react-calendar__tile--now:enabled:focus {
+    background: #3182ce;
+}
+
+.meeting-day {
+    width: 8px;
+    height: 8px;
+    margin-top: 0.25rem;
+    background-color: #38a169;
+    border-radius: 50%;
+}
