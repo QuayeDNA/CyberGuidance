@@ -59,7 +59,7 @@ const Header = () => {
           <div className="flex items-center z-50">
             <div className="flex items-center space-x-4 mr-12">
               {/* Logo and App Name */}
-              <img src="/src/assets/Logo.svg" alt="TTU Counseling Logo" className="h-10" />
+              <img src="../../public/Logo.svg" alt="TTU Counseling Logo" className="h-10" />
               <span className="text-white text-xl font-semibold">CyberGuidance</span>
             </div>
             {/* Navigation Links for Medium and Larger Screens */}
