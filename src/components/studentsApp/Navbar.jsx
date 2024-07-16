@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaBell, FaCog, FaSignOutAlt, FaBars, FaUserCircle, FaUserAlt, FaHome, FaComment, FaTools } from 'react-icons/fa';
+import { FaBell, FaCog, FaSignOutAlt, FaBars, FaUserCircle, FaUserAlt, FaHome, FaComment, FaRegNewspaper } from 'react-icons/fa';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import LogoutModal from '../ui/modal/logoutModal';
 
@@ -15,7 +15,7 @@ function Navbar() {
         { id: 2, to: '/main/counselors', icon: <FaUserAlt className="mr-2" />, text: 'Find a Councellor' },
         { id: 3, to: '/main/message', icon: <FaComment className="mr-2" />, text: 'Messages' },
         { id: 4, to: '/main/user', icon: <FaUserCircle className='mr-2' />, text: "User" },
-        { id: 5, to: '/main/articles', icon: <FaTools className='mr-2' />, text: "Articles"}
+        { id: 5, to: '/main/articles', icon: <FaRegNewspaper className='mr-2' />, text: "Articles"}
 
     ];
 

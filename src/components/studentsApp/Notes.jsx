@@ -103,23 +103,23 @@ function Notes() {
     }
 
     return (
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto px-2 pt-4">
             <div className="flex items-center justify-between mb-2">
-                <div className="flex space-x-4">
+                <div className="flex space-x-2">
                     <button onClick={handleAddNote} className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">
-                        <MdAdd className="mr-1" /><span className="hidden sm:inline">Add Note</span>
+                        <MdAdd className="mr-0 lg:mr-1" /><span className="hidden sm:inline">Add Note</span>
                     </button>
                     <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300">
-                        <MdDownload className="mr-1" /><span className="hidden sm:inline">Download</span>
+                        <MdDownload className="mr-0 lg:mr-1" /><span className="hidden sm:inline">Download</span>
                     </button>
                     <button onClick={handleDeleteAll} className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300">
-                        <MdDelete className="mr-1" /><span className="hidden sm:inline">Delete All</span>
+                        <MdDelete className="mr-0 lg:mr-1" /><span className="hidden sm:inline">Delete All</span>
                     </button>
                 </div>
                 <div>
                     {selectedNote && isEditing ? (
                         <div>
-                            <div className="justify-end space-x-2 sm:hidden lg:flex">
+                            <div className="justify-end space-x-2 hidden lg:flex">
                                 <button
                                     onClick={handleSaveEdit}
                                     className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
@@ -146,7 +146,7 @@ function Notes() {
                     {notes.map((note) => (
                         <button
                             key={note.id}
-                            className={`p-4 mb-4 rounded-lg cursor-pointer transition-all duration-200 ${selectedNote && selectedNote.id === note.id
+                            className={`p-4 mb-4 rounded-lg cursor-pointer w-full text-left transition-all duration-200 ${selectedNote && selectedNote.id === note.id
                                 ? 'bg-blue-100 border-blue-300'
                                 : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
                                 } border`}

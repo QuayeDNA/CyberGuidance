@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaUserCircle, FaUserAlt, FaHome, FaComment, FaTools } from 'react-icons/fa';
+import { FaUserCircle, FaUserAlt, FaHome, FaComment, FaRegNewspaper } from 'react-icons/fa';
 
 function AppNavbar() {
     const location = useLocation();
@@ -9,7 +9,7 @@ function AppNavbar() {
         { id: 2, to: '/main/counselors', icon: <FaUserAlt className="mr-2" />, text: 'Counselors' },
         { id: 3, to: '/main/message', icon: <FaComment className="mr-2" />, text: 'Messages' },
         { id: 4, to: '/main/user', icon: <FaUserCircle className='mr-2' />, text: "User" },
-        { id: 5, to: '/main/articles', icon: <FaTools className='mr-2' />, text: "Materials" }
+        { id: 5, to: '/main/articles', icon: <FaRegNewspaper className='mr-2' />, text: "Articles" }
     ];
     return (
         <nav className="bg-white shadow-md py-4 border-t-[1px] border-gray-100 fixed z-10 w-full mt-16 block md:hidden bottom-0">
