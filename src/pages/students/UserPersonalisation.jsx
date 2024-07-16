@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'
-
+import Background from "../../components/Background"
 const IssueSelectionPage = () => {
     const [selectedIssues, setSelectedIssues] = useState([]);
     const navigate = useNavigate();
@@ -55,6 +55,7 @@ const IssueSelectionPage = () => {
     };
 
     return (
+        <Background>
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
             <div className="max-w-full mx-auto p-8 bg-white shadow-lg rounded-lg sm:max-w-screen-md animate-fadeIn">
                 <h2 className="text-3xl font-bold mb-4 text-center">Select Your Areas of Interest</h2>
@@ -99,6 +100,7 @@ const IssueSelectionPage = () => {
                 </div>
             </div>
         </div>
+        </Background>
     );
 };
 

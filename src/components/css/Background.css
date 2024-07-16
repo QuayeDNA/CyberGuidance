@@ -1,0 +1,40 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .bg-pattern {
+    position: relative;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    overflow: hidden;
+    min-height: 100vh; /* Full viewport height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .bg-pattern::before,
+  .bg-pattern::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.2;
+    background: rgba(7, 206, 232, 0.5);
+  }
+  
+  .bg-pattern::before {
+    width: 200px;
+    height: 200px;
+    top: -50px;
+    left: 50px;
+  }
+  
+  .bg-pattern::after {
+    width: 300px;
+    height: 300px;
+    bottom: -100px;
+    right: -100px;
+  }
+  

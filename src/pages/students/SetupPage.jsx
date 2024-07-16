@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { FaInfoCircle, FaCheck } from 'react-icons/fa';
 import {useNavigate} from 'react-router-dom';
-
+import Background from "../../components/Background"
 const SetupPage = () => {
     const handleClose = () => {
         // Handle cancel action if needed
@@ -54,6 +54,7 @@ const SetupPage = () => {
     }, [submissionSuccess]);
 
     return (
+        <Background>
         <div className="max-w-full overflow-hidden rounded-lg sm:max-w-screen-md mx-auto p-4 bg-white shadow-lg my-[20px]">
            <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
@@ -123,6 +124,7 @@ const SetupPage = () => {
             </form>
                 )}
         </div>
+        </Background>
     );
 };
 

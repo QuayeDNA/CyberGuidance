@@ -8,6 +8,9 @@ export default {
         'height': 'height',
         'spacing': 'margin, padding',
       },
+      fontFamily: {
+        sans: ['Poppins', 'sans-serif'],
+      },
     },
   },
   variants: {
