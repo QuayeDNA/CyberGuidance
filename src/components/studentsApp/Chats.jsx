@@ -47,7 +47,7 @@ const ChatComponent = () => {
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
- 
+
   useEffect(() => {
     // Simulate other user typing
     const typingInterval = setInterval(() => {
@@ -68,7 +68,7 @@ const ChatComponent = () => {
       };
       setMessages([...messages, newMessage]);
       setInputMessage('');
-      
+
       // Simulate message status updates
       setTimeout(() => updateMessageStatus(newMessage.id, 'delivered'), 1000);
       setTimeout(() => updateMessageStatus(newMessage.id, 'read'), 2000);
@@ -223,9 +223,8 @@ const ChatComponent = () => {
           {filteredUsers.map((user) => (
             <button
               key={user.id}
-              className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 w-full ${
-                selectedUser.id === user.id ? 'bg-blue-50' : ''
-              }`}
+              className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 w-full ${selectedUser.id === user.id ? 'bg-blue-50' : ''
+                }`}
               onClick={() => handleSelectUser(user)}
             >
               <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full mr-4" />
@@ -233,8 +232,8 @@ const ChatComponent = () => {
                 <div className="flex justify-between items-center">
                   <h3 className="font-semibold">{user.name}</h3>
                   <p className="text-xs">
-                  <BsCircleFill className={`w-3 h-3 ${user.online ? 'text-green-500' : 'text-gray-300'}`} />
-</p>
+                    <BsCircleFill className={`w-3 h-3 ${user.online ? 'text-green-500' : 'text-gray-300'}`} />
+                  </p>
 
                 </div>
                 <div className="flex justify-between items-center">
@@ -305,7 +304,7 @@ const ChatComponent = () => {
                           onClick={() => handleDeleteMessage(message.id)}
                           className="text-xs text-white hover:underline mt-1"
                         >
-                         <FiTrash2 className="w-4 h-4" />
+                          <FiTrash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>

@@ -1,13 +1,21 @@
-
+import { useNavigate } from "react-router-dom";
 import counselorsData from '../../data/counselorsData';
 
 const RecommendedCounselors = () => {
+
+  const navigate = useNavigate();
+  
+  const handleCounselorSelect = (id) => {
+    navigate(`/main/counselor/${id}`);
+};
+
+
   return (
-    <div className="overflow-x-auto my-8 pb-4">
-      <h2 className="text-2xl font-bold mb-4">Recommended Counselors</h2>
-      <div className="flex space-x-4">
+    <div className=" my-8 pb-4">
+      <h2 className="text-2xl font-bold my-4">Recommended Counselors</h2>
+      <div className="flex space-x-4 overflow-x-auto">
         {counselorsData.map((counselor) => (
-          <div key={counselor.id} className="relative flex-shrink-0 w-40 bg-white shadow-lg rounded-lg p-4">
+          <button key={counselor.id} className="relative flex-shrink-0 w-40 bg-white shadow-lg rounded-lg p-4"  onClick={() => handleCounselorSelect(counselor.id)}>
             <div className="relative">
               <img
                 src={counselor.imageUrl}
@@ -24,7 +32,7 @@ const RecommendedCounselors = () => {
                 <h3 className="text-sm font-semibold">{counselor.name}</h3>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>
