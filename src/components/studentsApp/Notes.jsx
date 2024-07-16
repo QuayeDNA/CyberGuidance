@@ -144,7 +144,7 @@ function Notes() {
                 <div className="max-h-[300px] overflow-y-auto">
                     <h3 className="text-lg font-semibold mb-4">All Notes</h3>
                     {notes.map((note) => (
-                        <div
+                        <button
                             key={note.id}
                             className={`p-4 mb-4 rounded-lg cursor-pointer transition-all duration-200 ${selectedNote && selectedNote.id === note.id
                                 ? 'bg-blue-100 border-blue-300'
@@ -165,7 +165,7 @@ function Notes() {
                                 </button>
                             </div>
                             <p className="mt-2 text-gray-800 truncate">{stripHtml(note.note)}</p>
-                        </div>
+                        </button>
                     ))}
                 </div>
 
