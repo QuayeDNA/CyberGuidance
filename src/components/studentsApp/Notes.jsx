@@ -1,73 +1,169 @@
-import { useState } from 'react';
-import { MdAdd, MdDownload, MdDelete } from 'react-icons/md';
-import { FaEllipsisV } from 'react-icons/fa';
-import { MdNote } from 'react-icons/md';
-function Notes() {
-    const notesList = [
-        { id: 1, date: '2023-04-01', note: 'First note content that is very long and should overflow' },
-        { id: 2, date: '2023-04-02', note: 'Second note content that is also quite long and needs to be truncated to fit the container width or other constraints if needed. This is the second note content that is also quite long and needs to be truncated to fit the container width or other constraints if needed.' },
-        { id: 3, date: '2023-04-03', note: 'Third note content that is also quite long and needs to be truncated to fit the container width or other constraints if needed. This is the third note content that is also quite long and needs to be truncated to fit the container width or other constraints if needed. More content here and more content here and more content here and more content here and more content here.Third note content that is also quite long and needs to be truncated to fit the container width or other constraints if needed. This is the third note content that is also quite long and needs to be truncated to fit the container width or other constraints if needed. More content here and more content here and more content here and more content here and more content here.' },
-        { id: 4, date: '2023-04-04', note: 'Fourth note content' },
-        { id: 5, date: '2023-04-05', note: 'Fifth note content that is very long and should overflow.' },
-    ];
+import { useState, useEffect } from 'react';
+import { MdAdd, MdDownload, MdDelete, MdNote, MdEdit, MdSave, MdClose } from 'react-icons/md';
 
+function Notes() {
+    const [notes, setNotes] = useState([]);
     const [selectedNote, setSelectedNote] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedNote, setEditedNote] = useState({ date: '', note: '' });
+
+    useEffect(() => {
+        const storedNotes = JSON.parse(localStorage.getItem('notes')) || [];
+        setNotes(storedNotes);
+    }, []);
+
+    const saveNotesToLocalStorage = (updatedNotes) => {
+        localStorage.setItem('notes', JSON.stringify(updatedNotes));
+    };
+
+    const handleAddNote = () => {
+        const newNote = {
+            id: Date.now(),
+            date: new Date().toISOString().split('T')[0],
+            note: ''
+        };
+        const updatedNotes = [newNote, ...notes];
+        setNotes(updatedNotes);
+        saveNotesToLocalStorage(updatedNotes);
+        setSelectedNote(newNote);
+        setIsEditing(true);
+        setEditedNote(newNote);
+    };
+
+    const handleDeleteAll = () => {
+        if (window.confirm('Are you sure you want to delete all notes?')) {
+            setNotes([]);
+            setSelectedNote(null);
+            saveNotesToLocalStorage([]);
+        }
+    };
+
+    const handleDeleteNote = (id) => {
+        const updatedNotes = notes.filter(note => note.id !== id);
+        setNotes(updatedNotes);
+        saveNotesToLocalStorage(updatedNotes);
+        if (selectedNote && selectedNote.id === id) {
+            setSelectedNote(null);
+        }
+    };
 
     const handleNoteClick = (note) => {
         setSelectedNote(note);
+        setIsEditing(false);
+    };
+
+    const handleEditClick = () => {
+        setIsEditing(true);
+        setEditedNote(selectedNote);
+    };
+
+    const handleSaveEdit = () => {
+        const updatedNotes = notes.map(note =>
+            note.id === editedNote.id ? editedNote : note
+        );
+        setNotes(updatedNotes);
+        saveNotesToLocalStorage(updatedNotes);
+        setSelectedNote(editedNote);
+        setIsEditing(false);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditedNote(selectedNote);
+    };
+
+    const handleDownload = () => {
+        const blob = new Blob([JSON.stringify(notes, null, 2)], { type: 'application/json' });
+        const href = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = href;
+        link.download = 'notes.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
-        <div>
-            <div className="flex items-center p-4">
+        <div className="container mx-auto p-4">
+            <div className="flex items-center justify-between mb-2">
                 <div className="flex space-x-4">
-                    <button className="flex items-center mr-2 text-gray-700 hover:text-gray-900">
-                        <MdAdd className="mr-1" /><span className="hidden sm:inline">Add</span>
+                    <button onClick={handleAddNote} className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">
+                        <MdAdd className="mr-1" /><span className="hidden sm:inline">Add Note</span>
                     </button>
-                    <button className="flex items-center mr-2 text-gray-700 hover:text-gray-900">
+                    <button onClick={handleDownload} className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-300">
                         <MdDownload className="mr-1" /><span className="hidden sm:inline">Download</span>
                     </button>
-                    <button className="flex items-center text-red-500 hover:text-gray-900">
+                    <button onClick={handleDeleteAll} className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300">
                         <MdDelete className="mr-1" /><span className="hidden sm:inline">Delete All</span>
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 h-auto gap-4">
-                <div className="flex flex-col items-center justify-start bg-gray-50 p-2 rounded-lg overflow-y-auto max-h-[270px] w-full">
-                    {selectedNote ? (
-                        <div className="p-2 rounded-lg w-full">
-                            <p className="text-md font-bold text-gray-700 mb-2">{selectedNote.date}</p>
-                            <p className="text-sm text-gray-800">{selectedNote.note}</p>
-                        </div>
-                    ) : (
-                        <div className="text-center m-auto flex flex-col justify-center items-center p-6">
-      {/* Add the notes icon to the top of the paragraph */}
-      <MdNote className="text-gray-400 w-auto h-16" />
-      <p className="text-sm text-gray-600 ">Select a note to view details.</p>
-    </div>
-                    )}
-                </div>
-                <div className="flex flex-col items-center justify-center rounded-lg">
-                    <h3 className="text-md font-semibold mb-2">All Notes</h3>
-                    <div className="overflow-y-auto max-h-60 w-full">
-                        {notesList.map((note) => (
-                            <button
-                                key={note.id}
-                                className="bg-white p-2 rounded-lg m-2 w-full text-left cursor-pointer overflow-hidden border border-gray-200 relative shadow-md"
-                                onClick={() => handleNoteClick(note)}
-                                style={{ maxWidth: '92%', maxHeight: '100px' }}
-                            >
-                                <button className="absolute top-0 right-0 p-2  text-gray-500">
-                                    <FaEllipsisV />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="max-h-[300px] overflow-y-auto">
+                    <h3 className="text-lg font-semibold mb-4">All Notes</h3>
+                    {notes.map((note) => (
+                        <div
+                            key={note.id}
+                            className={`p-4 mb-4 rounded-lg cursor-pointer transition-all duration-200 ${
+                                selectedNote && selectedNote.id === note.id
+                                    ? 'bg-blue-100 border-blue-300'
+                                    : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                            } border`}
+                            onClick={() => handleNoteClick(note)}
+                        >
+                            <div className="flex justify-between items-start">
+                                <p className="text-sm text-gray-600">{note.date}</p>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteNote(note.id);
+                                    }}
+                                    className="text-red-500 hover:text-red-700"
+                                >
+                                    <MdDelete />
                                 </button>
-                                <div className='mt-3 p-1'>
-                                    <p className="text-gray-700 truncate">{note.note}</p>
-                                    <p className="text-gray-600 text-sm">{note.date}</p>
+                            </div>
+                            <p className="mt-2 text-gray-800 truncate">{note.note}</p>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="bg-white rounded-lg shadow-lg p-6 max-h-[300px] overflow-y-auto">
+                    {selectedNote ? (
+                        isEditing ? (
+                            <div>
+                                <div className="flex justify-end space-x-2 mb-4">
+                                    <button onClick={handleSaveEdit} className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">
+                                        <MdSave className="mr-1" />Save
+                                    </button>
+                                    <button onClick={handleCancelEdit} className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
+                                        <MdClose className="mr-1" />Cancel
+                                    </button>
                                 </div>
-                            </button>
-                        ))}
-                    </div>
+                                <textarea
+                                    value={editedNote.note}
+                                    onChange={(e) => setEditedNote({ ...editedNote, note: e.target.value })}
+                                    className="w-full h-64 p-2 border rounded-lg resize-none"
+                                />
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="flex justify-between items-center mb-4">
+                                    <p className="text-lg font-semibold text-gray-700">{selectedNote.date}</p>
+                                    <button onClick={handleEditClick} className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
+                                        <MdEdit className="mr-1" />Edit
+                                    </button>
+                                </div>
+                                <p className="text-gray-800 whitespace-pre-wrap break-words">{selectedNote.note}</p>
+                            </div>
+                        )
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                            <MdNote className="text-6xl mb-4" />
+                            <p>Select a note to view or edit</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
