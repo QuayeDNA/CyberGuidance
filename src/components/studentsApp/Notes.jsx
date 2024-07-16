@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { MdAdd, MdDownload, MdDelete, MdNote, MdEdit, MdSave, MdClose } from 'react-icons/md';
-
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css'; // Import Quill styles
+import '../css/Notes.css'
 function Notes() {
     const [notes, setNotes] = useState([]);
     const [selectedNote, setSelectedNote] = useState(null);
@@ -83,6 +85,16 @@ function Notes() {
         document.body.removeChild(link);
     };
 
+    const modules = {
+        toolbar: [
+            [{ 'header': [1, 2, false] }],
+            ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['link', 'image'],
+            ['clean']
+        ],
+    };
+
     return (
         <div className="container mx-auto p-4">
             <div className="flex items-center justify-between mb-2">
@@ -97,77 +109,100 @@ function Notes() {
                         <MdDelete className="mr-1" /><span className="hidden sm:inline">Delete All</span>
                     </button>
                 </div>
-            </div>
+                <div>
+            {selectedNote && isEditing ? (
+                <div>
+                    <div className="justify-end space-x-2 sm:hidden lg:flex">
+                        <button
+                            onClick={handleSaveEdit}
+                            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
+                        >
+                            <MdSave className="mr-1" /> Save
+                        </button>
+                        <button
+                            onClick={handleCancelEdit}
+                            className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300"
+                        >
+                            <MdClose className="mr-1" /> Cancel
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div></div>
+            )}
+        </div>
+                </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="max-h-[300px] overflow-y-auto">
-                    <h3 className="text-lg font-semibold mb-4">All Notes</h3>
-                    {notes.map((note) => (
-                        <div
-                            key={note.id}
-                            className={`p-4 mb-4 rounded-lg cursor-pointer transition-all duration-200 ${
-                                selectedNote && selectedNote.id === note.id
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="max-h-[300px] overflow-y-auto">
+                        <h3 className="text-lg font-semibold mb-4">All Notes</h3>
+                        {notes.map((note) => (
+                            <div
+                                key={note.id}
+                                className={`p-4 mb-4 rounded-lg cursor-pointer transition-all duration-200 ${selectedNote && selectedNote.id === note.id
                                     ? 'bg-blue-100 border-blue-300'
                                     : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                            } border`}
-                            onClick={() => handleNoteClick(note)}
-                        >
-                            <div className="flex justify-between items-start">
-                                <p className="text-sm text-gray-600">{note.date}</p>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteNote(note.id);
-                                    }}
-                                    className="text-red-500 hover:text-red-700"
-                                >
-                                    <MdDelete />
-                                </button>
+                                    } border`}
+                                onClick={() => handleNoteClick(note)}
+                            >
+                                <div className="flex justify-between items-start">
+                                    <p className="text-sm text-gray-600">{note.date}</p>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteNote(note.id);
+                                        }}
+                                        className="text-red-500 hover:text-red-700"
+                                    >
+                                        <MdDelete />
+                                    </button>
+                                </div>
+                                <p className="mt-2 text-gray-800 truncate">{note.note}</p>
                             </div>
-                            <p className="mt-2 text-gray-800 truncate">{note.note}</p>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
 
-                <div className="bg-white rounded-lg shadow-lg p-6 max-h-[300px] overflow-y-auto">
-                    {selectedNote ? (
-                        isEditing ? (
-                            <div>
-                                <div className="flex justify-end space-x-2 mb-4">
-                                    <button onClick={handleSaveEdit} className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">
-                                        <MdSave className="mr-1" />Save
-                                    </button>
-                                    <button onClick={handleCancelEdit} className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
-                                        <MdClose className="mr-1" />Cancel
-                                    </button>
+                    <div className="bg-white rounded-lg shadow-lg p-2 max-h-[300px] overflow-y-auto">
+                        {selectedNote ? (
+                            isEditing ? (
+                                <div>
+                                    <div className="flex justify-end space-x-2 mb-4 lg:hidden">
+                                        <button onClick={handleSaveEdit} className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">
+                                            <MdSave className="mr-1" />Save
+                                        </button>
+                                        <button onClick={handleCancelEdit} className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
+                                            <MdClose className="mr-1" />Cancel
+                                        </button>
+                                    </div>
+                                    <ReactQuill
+                                        theme="snow"
+                                        value={editedNote.note}
+                                        onChange={(content) => setEditedNote({ ...editedNote, note: content })}
+                                        modules={modules}
+                                        className="h-64 mb-12"
+                                    />
                                 </div>
-                                <textarea
-                                    value={editedNote.note}
-                                    onChange={(e) => setEditedNote({ ...editedNote, note: e.target.value })}
-                                    className="w-full h-64 p-2 border rounded-lg resize-none"
-                                />
-                            </div>
+                            ) : (
+                                <div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <p className="text-lg font-semibold text-gray-700">{selectedNote.date}</p>
+                                        <button onClick={handleEditClick} className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
+                                            <MdEdit className="mr-1" />Edit
+                                        </button>
+                                    </div>
+                                    <div dangerouslySetInnerHTML={{ __html: selectedNote.note }} className="text-gray-800 whitespace-pre-wrap break-words" />
+                                </div>
+                            )
                         ) : (
-                            <div>
-                                <div className="flex justify-between items-center mb-4">
-                                    <p className="text-lg font-semibold text-gray-700">{selectedNote.date}</p>
-                                    <button onClick={handleEditClick} className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
-                                        <MdEdit className="mr-1" />Edit
-                                    </button>
-                                </div>
-                                <p className="text-gray-800 whitespace-pre-wrap break-words">{selectedNote.note}</p>
+                            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                                <MdNote className="text-6xl mb-4" />
+                                <p>Select a note to view or edit</p>
                             </div>
-                        )
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                            <MdNote className="text-6xl mb-4" />
-                            <p>Select a note to view or edit</p>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+            );
 }
 
-export default Notes;
+            export default Notes;
