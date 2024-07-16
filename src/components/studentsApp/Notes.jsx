@@ -3,7 +3,6 @@ import { MdAdd, MdDownload, MdDelete, MdNote, MdEdit, MdSave, MdClose } from 're
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
 import '../css/Notes.css'
-import htmlParser from 'html-react-parser';
 
 function Notes() {
     const [notes, setNotes] = useState([]);
