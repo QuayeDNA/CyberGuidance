@@ -58,7 +58,7 @@ function Navbar() {
             <div className="mx-auto px-6 flex justify-between items-center">
                 <div className="flex items-center space-x-4">
                     {/* Logo and App Name */}
-                    <img src="/src/assets/Logo.svg" alt="TTU Counseling Logo" className="h-10 bg-gray-700 rounded-lg" />
+                    <img src="../../../public/Logo.svg" alt="TTU Counseling Logo" className="h-12 bg-gray-700 rounded-lg p-1" />
                     <span className="text-gray-700 text-xl font-semibold hidden lg:block">CyberGuidance</span>
                 </div>
                 <div className="mx-auto px-2 justify-center items-center hidden md:flex">
