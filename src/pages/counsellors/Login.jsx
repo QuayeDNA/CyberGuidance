@@ -23,7 +23,7 @@
 
     // Redirect user if already logged in
     if (isLoggedIn()) {
-        navigate('/dashboard'); // Assuming '/dashboard' is the path for the main/dashboard page
+        navigate('/student/dashboard'); // Assuming '/dashboard' is the path for the main/dashboard page
     }
 
         return (

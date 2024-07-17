@@ -1,47 +1,30 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import UserInfoModal from '../modal/UserInfoModal';
+import { useAuth } from '../../contexts/AuthContext'; // Adjust the path as necessary
 import PropTypes from 'prop-types';
 
-const BookSessionButton = ({ className }) => {
-
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+function BookSessionButton({ className }) {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth(); // Use the auth status from the context
 
-  useEffect(() => {
-    // Check if user information is stored in local storage
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      setIsLoggedIn(true);
-    }
-  }, []);
-
-  const handleBookSessionClick = () => {
-    if (isLoggedIn) {
-      navigate ('/main/dashboard'); // Navigate to the dashboard
+  const handleClick = () => {
+    if (isAuthenticated) {
+      navigate('/student/dashboard');
     } else {
-     navigate ('/signup');
+      navigate('/student/login');
     }
   };
 
- 
-
   return (
-    <>
-      <button
-        onClick={handleBookSessionClick}
-        className={`${className}`}
-      >
-        Book a Session
-      </button>
-      <UserInfoModal />
-    </>
+    <button
+      onClick={handleClick}
+      className={`${className}`}
+    >
+      Book a Session
+    </button>
   );
-};
+}
 
 BookSessionButton.propTypes = {
-    className: PropTypes.string
-    };
-
+  className: PropTypes.string,
+};
 export default BookSessionButton;

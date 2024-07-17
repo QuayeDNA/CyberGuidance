@@ -5,11 +5,11 @@ function AppNavbar() {
     const location = useLocation();
 
     const navLinks = [
-        { id: 1, to: '/main/dashboard', icon: <FaHome className="mr-2" />, text: 'Dashboard' },
-        { id: 2, to: '/main/counselors', icon: <FaUserAlt className="mr-2" />, text: 'Counselors' },
-        { id: 3, to: '/main/message', icon: <FaComment className="mr-2" />, text: 'Messages' },
-        { id: 4, to: '/main/user', icon: <FaUserCircle className='mr-2' />, text: "User" },
-        { id: 5, to: '/main/articles', icon: <FaRegNewspaper className='mr-2' />, text: "Articles" }
+        { id: 1, to: '/student/dashboard', icon: <FaHome className="mr-2" />, text: 'Dashboard' },
+        { id: 2, to: '/student/counselors', icon: <FaUserAlt className="mr-2" />, text: 'Counselors' },
+        { id: 3, to: '/student/message', icon: <FaComment className="mr-2" />, text: 'Messages' },
+        { id: 4, to: '/student/user', icon: <FaUserCircle className='mr-2' />, text: "User" },
+        { id: 5, to: '/student/articles', icon: <FaRegNewspaper className='mr-2' />, text: "Articles" }
     ];
     return (
         <nav className="bg-white shadow-md py-4 border-t-[1px] border-gray-100 fixed z-10 w-full mt-16 block md:hidden bottom-0">

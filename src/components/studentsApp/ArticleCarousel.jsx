@@ -17,7 +17,7 @@ const ArticlesCarousel = ({ articles }) => {
     };
 
     return (
-        <Card title="Articles" showAllLink={{ link: '/main/articles', text: 'Read More' }}>
+        <Card title="Articles" showAllLink={{ link: '/student/articles', text: 'Read More' }}>
             <Slider {...settings}>
                 {articles.map((article) => (
                     <div key={article.id}>

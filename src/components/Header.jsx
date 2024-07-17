@@ -3,13 +3,11 @@ import { Link } from 'react-scroll';
 import { useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import BookSessionButton from '../components/ui/button/bookSessionButton';
-import UserInfoModal from '../components/ui/modal/UserInfoModal'; // Import the modal component
 import './css/Header.css'; // Import the custom CSS file
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
   localStorage.clear(); // clear local storage
   const links = [
@@ -45,22 +43,17 @@ const Header = () => {
   };
 
   const handleLoginClick = () => {
-    navigate('/login');
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
+    navigate('/student/login');
   };
 
   return (
-    <>
       <header className={`fixed h-20 w-full top-0 left-0 z-[10] transition-colors duration-500 ${scrolled ? 'bg-gray-700 shadow-lg' : 'bg-transparent'}`}>
         <div className="container mx-auto flex justify-between items-center py-4 px-8 z-50">
           <div className="flex items-center z-50">
             <div className="flex items-center space-x-4 mr-12">
               {/* Logo and App Name */}
-              <img src="../../public/Logo.svg" alt="TTU Counseling Logo" className="h-10" />
-              <span className="text-white text-xl font-semibold">CyberGuidance</span>
+              <img src="/logo/Logo.svg" alt="TTU Counseling Logo" className="h-10" />
+              <span className="text-white text-xl font-semibold">Cyber Counselling</span>
             </div>
             {/* Navigation Links for Medium and Larger Screens */}
             <nav className="hidden lg:flex space-x-6 ml-4">
@@ -111,12 +104,6 @@ const Header = () => {
           ))}
         </nav>
       </header>
-
-      {/* Modal */}
-      {modalOpen && (
-        <UserInfoModal open={modalOpen} handleClose={handleCloseModal} />
-      )}
-    </>
   );
 };
 

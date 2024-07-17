@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { IoIosArrowBack } from 'react-icons/io';
-import BasketballIcon from "../../public/BasketBall Icon.svg";
+import BasketballIcon from "/BasketBall Icon.svg?url";
 import './css/ComingSoon.css'; // Import the custom CSS file
 
 const ComingSoon = () => {

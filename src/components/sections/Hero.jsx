@@ -29,7 +29,8 @@ const Hero = () => {
         <div className="text-left text-white max-w-2xl z-[9]">
           <h1 className="text-lg md:text-2xl lg:text-3xl font-bold leading-tight">We&apos;re here to provide you with professional, compassionate counseling and guidance.</h1>
           <p className="text-sm md:text-md lg:text-lg mt-4 xl:text-xl">Our team of experienced counselors are here to help you navigate through life&apos;s challenges and uncertainties.</p>
-         <div className='mt-4 group inline-flex items-center'><BookSessionButton className="border border-white text-white rounded-lg px-4 py-2 transition duration-300 ease-in-out hover:bg-gray-700 shadow-md"/>
+         <div className='mt-4 group inline-flex items-center'>
+          <BookSessionButton className="border border-white text-white rounded-lg px-4 py-2 transition duration-300 ease-in-out hover:bg-gray-700 shadow-md"/>
          <FaArrowRight className="ml-2 transition-transform duration-300 transform group-hover:translate-x-2" />
          </div>
          
