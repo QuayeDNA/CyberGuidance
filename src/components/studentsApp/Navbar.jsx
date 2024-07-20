@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FaBell, FaSignOutAlt, FaBars, FaUserCircle, FaUserAlt, FaHome, FaComment, FaRegNewspaper } from 'react-icons/fa';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function Navbar() {
@@ -9,7 +9,6 @@ function Navbar() {
     const [notifications, setNotifications] = useState([]);
 
     const navigate = useNavigate();
-    const location = useLocation();
 
     const navLinks = [
         { id: 1, to: '/student/dashboard', icon: <FaHome className="mr-2" />, text: 'Dashboard' },
@@ -80,7 +79,7 @@ function Navbar() {
 
     return (
         <header className="bg-white shadow-md py-4 fixed z-20 w-full">
-            <div className="container mx-auto px-6 flex justify-between items-center">
+            <div className="container mx-auto px-2 flex justify-between items-center">
                 <div className="flex items-center space-x-4">
                     <img src="/logo/Logo.svg" alt="TTU Counseling Logo" className="h-12 bg-gray-700 rounded-lg p-1" />
                     <span className="text-gray-700 text-xl font-semibold hidden lg:block">Cyber-Counselling</span>
@@ -92,12 +91,12 @@ function Navbar() {
                             to={link.to}
                             className={({ isActive }) =>
                                 `text-gray-700  transition duration-200 flex items-center ${
-                                    isActive ? 'bg-blue-500 py-1 px-2 text-white rounded-full font-semibold' : ''
+                                    isActive ? 'bg-blue-500 py-2 px-4 text-white rounded-full font-semibold' : ''
                                 }`
                             }
                         >
                             {link.icon}
-                            <span className={`${location.pathname === link.to ? 'block' : 'hidden'}`}>{link.text}</span>
+                            <span>{link.text}</span>
                         </NavLink>
                     ))}
                 </nav>

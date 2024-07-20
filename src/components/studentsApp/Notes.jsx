@@ -169,7 +169,7 @@ function Notes() {
                     ))}
                 </div>
 
-                <div className="bg-white rounded-lg shadow-lg p-2 max-h-[300px] overflow-y-auto">
+                <div className=" p-2 max-h-[300px] overflow-y-auto">
                     {selectedNote ? (
                         isEditing ? (
                             <div>

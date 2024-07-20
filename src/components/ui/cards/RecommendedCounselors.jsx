@@ -5,7 +5,7 @@ const RecommendedCounselors = () => {
   const navigate = useNavigate();
   
   const handleCounselorSelect = (id) => {
-    navigate(`/main/counselor/${id}`);
+    navigate(`/student/counselor/${id}`);
   };
 
   return (

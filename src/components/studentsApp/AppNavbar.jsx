@@ -23,7 +23,7 @@ function AppNavbar() {
                             key={link.id}
                             to={link.to}
                             className={({ isActive }) =>
-                                `text-gray-700 transition duration-200 flex items-center ${isActive ? 'bg-blue-500 py-1 px-2 text-white rounded-full' : ''}`
+                                `text-gray-700 transition duration-200 flex items-center ${isActive ? 'bg-blue-500 py-2 px-4 text-white rounded-full' : ''}`
                             }
                         >
                             {link.icon}

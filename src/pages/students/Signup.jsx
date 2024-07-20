@@ -73,8 +73,8 @@ function Signup() {
             <FaSpinner className="animate-spin text-white text-4xl" />
           </div>
         ) : (
-          <div className="relative z-10 bg-white p-8 rounded-lg shadow-lg w-full max-w-md m-6 transition-all duration-500 ease-in-out transform hover:scale-105">
-            <h2 className="text-3xl font-bold text-center mb-6 text-blue-600">Sign Up for Cyber-Counselling</h2>
+          <div className="relative z-10 bg-white p-5 rounded-lg shadow-lg w-full max-w-md m-3 transition-all duration-500 ease-in-out transform hover:scale-105">
+            <h2 className="xl:text-3xl md:text-2xl sm:text-xl font-bold text-center mb-6 text-blue-600">Sign Up for Cyber-Counselling</h2>
             <p className="text-center text-gray-600 mb-6">Create your account to get started.</p>
             <form onSubmit={handleSubmit(handleSignup)} className="space-y-4">
               <div>
@@ -145,7 +145,7 @@ function Signup() {
                 <button
                   type="button"
                   onClick={handlePasswordVisibility}
-                  className="absolute right-3 top-9 text-gray-500"
+                  className="absolute right-3 top-11 text-gray-500"
                 >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
@@ -175,7 +175,7 @@ function Signup() {
                 <button
                   type="button"
                   onClick={handlePasswordVisibility}
-                  className="absolute right-3 top-9 text-gray-500"
+                  className="absolute right-3 top-11 text-gray-500"
                 >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
