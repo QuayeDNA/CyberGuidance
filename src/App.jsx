@@ -10,7 +10,6 @@ import StudentPersonalization from "./pages/students/UserPersonalization";
 
 // Counselor routes
 import CounselorLogin from "./pages/counsellors/Login";
-import CounselorSignup from "./pages/counsellors/Signup";
 import CounselorMain from "./pages/counsellors/Main";
 
 // Admin routes
@@ -43,7 +42,6 @@ function App() {
                     {/* Counselor routes */}
                     <Route path="/counselor" element={<Navigate to="/counselor/login" replace />} />
                     <Route path="/counselor/login" element={<CounselorLogin />} />
-                    <Route path="/counselor/signup" element={<CounselorSignup />} />
                     <Route path="/counselor/*" element={<CounselorMain />} />
 
                     {/* Admin routes */}

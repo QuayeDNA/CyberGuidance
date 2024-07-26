@@ -1,11 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import counselorsData from '../../components/data/counselorsData';
 import { FaSearch } from 'react-icons/fa';
 
 const Counselors = () => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [bookedCounselor, setBookedCounselor] = useState(null);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Check local storage for a booked counselor
+        const storedCounselor = localStorage.getItem('bookedCounselor');
+        if (storedCounselor) {
+            setBookedCounselor(JSON.parse(storedCounselor));
+            navigate(`/student/counselor/${JSON.parse(storedCounselor).id}`);
+        }
+    }, [navigate]);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -15,9 +25,15 @@ const Counselors = () => {
         counselor.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleCounselorSelect = (id) => {
-        navigate(`/main/counselor/${id}`);
+    const handleCounselorSelect = (counselor) => {
+        setBookedCounselor(counselor);
+        localStorage.setItem('bookedCounselor', JSON.stringify(counselor));
+        navigate(`/student/counselor/${counselor.id}`);
     };
+
+    if (bookedCounselor) {
+        return null; // The navigation will handle redirecting to CounselorProfile
+    }
 
     return (
         <div className="container mx-auto px-4">
@@ -42,7 +58,7 @@ const Counselors = () => {
                     <button
                         key={counselor.id}
                         className="text-center cursor-pointer p-4 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg rounded-lg bg-white border border-gray-200"
-                        onClick={() => handleCounselorSelect(counselor.id)}
+                        onClick={() => handleCounselorSelect(counselor)}
                     >
                         <div className="lg:w-24 lg:h-24 mx-auto rounded-full overflow-hidden mb-4 md:w-20 md:h-20 w-16 h-auto">
                             <img src={counselor.imageUrl} alt={counselor.name} className="w-full h-full object-cover" />

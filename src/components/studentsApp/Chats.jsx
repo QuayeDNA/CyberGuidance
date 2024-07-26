@@ -27,7 +27,7 @@ const ChatComponent = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 w-screen px-4">
       {(!isMobileView || showChatList) && (
         <ChatList
           users={mockUsers}

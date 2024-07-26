@@ -1,22 +1,41 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import counselorsData from '../../components/data/counselorsData';
-import { FaSpinner, FaCheck, FaStar, FaCalendarAlt, FaClock } from 'react-icons/fa';
+import { FaSpinner, FaCheck, FaStar, FaCalendarAlt, FaClock, FaExclamationTriangle } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CounselorProfile = () => {
     const { id } = useParams();
-    const counselor = counselorsData.find(c => c.id.toString() === id);
+    const navigate = useNavigate();
+    const [counselor, setCounselor] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [bookingStatus, setBookingStatus] = useState('booking');
+    const [rating, setRating] = useState(0);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [reportReason, setReportReason] = useState('');
 
     useEffect(() => {
-        if (isModalOpen) {
+        const storedCounselor = localStorage.getItem('bookedCounselor');
+        if (storedCounselor) {
+            setCounselor(JSON.parse(storedCounselor));
+        } else {
+            const foundCounselor = counselorsData.find(c => c.id.toString() === id);
+            if (foundCounselor) {
+                setCounselor(foundCounselor);
+                localStorage.setItem('bookedCounselor', JSON.stringify(foundCounselor));
+            } else {
+                navigate('/main/counselors');
+            }
+        }
+    }, [id, navigate]);
+
+    useEffect(() => {
+        if (isModalOpen || isReportModalOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = 'unset';
         }
-    }, [isModalOpen]);
+    }, [isModalOpen, isReportModalOpen]);
 
     if (!counselor) {
         return (
@@ -26,7 +45,7 @@ const CounselorProfile = () => {
                 exit={{ opacity: 0 }}
                 className="container mx-auto px-4 mt-8 text-center text-red-500"
             >
-                Counselor not found
+                Loading...
             </motion.div>
         );
     }
@@ -42,6 +61,26 @@ const CounselorProfile = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setBookingStatus('booking');
+    };
+
+    const handleRating = (value) => {
+        setRating(value);
+    };
+
+    const handleReport = () => {
+        setIsReportModalOpen(true);
+    };
+
+    const submitReport = () => {
+        // Here you would typically send the report to your backend
+        console.log('Report submitted:', reportReason);
+        setIsReportModalOpen(false);
+        setReportReason('');
+    };
+
+    const cancelBooking = () => {
+        localStorage.removeItem('bookedCounselor');
+        navigate('/student/counselors');
     };
 
     return (
@@ -74,10 +113,23 @@ const CounselorProfile = () => {
                     </div>
                 </div>
                 <div className="px-8 py-6 bg-gray-50">
-                    <div className="flex items-center mb-4">
-                        <FaStar className="text-yellow-400 mr-2" />
-                        <span className="font-semibold">4.9</span>
-                        <span className="text-gray-500 ml-2">(120 reviews)</span>
+                <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <FaStar
+                                    key={star}
+                                    className={`cursor-pointer ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                                    onClick={() => handleRating(star)}
+                                />
+                            ))}
+                        </div>
+                        <button
+                            className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition duration-300 flex items-center"
+                            onClick={handleReport}
+                        >
+                            <FaExclamationTriangle className='mr-2'/>
+                            Report
+                        </button>
                     </div>
                     <div className="mb-4">
                         <h3 className="text-lg font-semibold mb-2">Specialties:</h3>
@@ -100,6 +152,14 @@ const CounselorProfile = () => {
                                 <span>9:00 AM - 5:00 PM</span>
                             </div>
                         </div>
+                        <div className="flex justify-between items-center mt-4">
+                        <button 
+                            className="bg-red-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
+                            onClick={cancelBooking}
+                        >
+                            Cancel Booking
+                        </button>
+                    </div>
                         <button 
                             className="bg-indigo-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
                             onClick={handleBookSession}
@@ -151,6 +211,50 @@ const CounselorProfile = () => {
                                     </button>
                                 </>
                             )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+             {/* Report Modal */}
+             <AnimatePresence>
+                {isReportModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                        onClick={() => setIsReportModalOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 50 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 50 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            className="bg-white p-8 rounded-lg shadow-xl text-center max-w-md mx-4"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h3 className="text-2xl font-bold mb-4">Report Counselor</h3>
+                            <textarea
+                                className="w-full h-32 p-2 border rounded mb-4"
+                                placeholder="Please provide details about your concern..."
+                                value={reportReason}
+                                onChange={(e) => setReportReason(e.target.value)}
+                            ></textarea>
+                            <div className="flex justify-end space-x-4">
+                                <button 
+                                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition duration-300"
+                                    onClick={() => setIsReportModalOpen(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
+                                    onClick={submitReport}
+                                >
+                                    Submit Report
+                                </button>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
