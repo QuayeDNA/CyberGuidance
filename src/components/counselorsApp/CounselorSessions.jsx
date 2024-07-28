@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { FaCalendar, FaClock, FaMapMarkerAlt, FaVideo, FaUserGraduate, FaSearch, FaFilter, FaEdit, FaArrowLeft } from 'react-icons/fa';
+import { FaCalendar, FaClock, FaMapMarkerAlt, FaVideo, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
 
 const CounselorSessions = () => {
   const [clients, setClients] = useState([]);
@@ -34,7 +34,7 @@ const CounselorSessions = () => {
             id: 2,
             name: 'Jane Smith',
             sessions: [
-              { id: 3, date: new Date(2023, 6, 26, 11, 15), status: 'upcoming', notes: '', location: 'Coffee Shop', method: 'in-person' },
+              { id: 3, date: new Date(2023, 6, 26, 11, 15), status: 'completed', notes: '', location: 'Coffee Shop', method: 'in-person' },
               { id: 4, date: new Date(2023, 6, 19, 15, 45), status: 'completed', notes: 'Worked on stress management techniques.', location: 'Office', method: 'in-person' },
             ]
           },
@@ -110,7 +110,7 @@ const CounselorSessions = () => {
         <>
           <div className="flex flex-col md:flex-row justify-between mb-6">
             <div className="flex items-center mb-4 md:mb-0">
-              <FaFilter className="text-gray-600 mr-2" />
+              <FaFilter className="text-gray-600 mr-2 text-md" />
               <select 
                 value={filter} 
                 onChange={(e) => setFilter(e.target.value)}
@@ -190,7 +190,7 @@ const CounselorSessions = () => {
             >
               <FaArrowLeft size={24} />
             </button>
-            <h2 className="text-2xl font-bold">{selectedClient.name}'s Sessions</h2>
+            <h2 className="text-2xl font-bold">{selectedClient.name}&apos;s Sessions</h2>
           </div>
           {selectedClient.sessions.length === 0 ? (
             <p className="text-xl text-gray-600 text-center">No sessions found for this client.</p>
