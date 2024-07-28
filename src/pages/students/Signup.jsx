@@ -5,7 +5,7 @@ import * as yup from "yup";
 import Footer from "../../components/Footer";
 import bgImage from "../../assets/Counselling.jpg";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
 
 // Define the validation schema
@@ -26,8 +26,8 @@ function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCard, setShowCard] = useState(false);
-  
-  const navigate = useNavigate();
+  const [verificationSent, setVerificationSent] = useState(false);
+
   const {
     control,
     handleSubmit,
@@ -53,12 +53,13 @@ function Signup() {
     setIsLoading(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Add your signup logic here
+  
+    // Store user data in localStorage
     localStorage.setItem("userToken", "yourTokenHere");
-    
+    localStorage.setItem("userFirstLogin", "true");
+  
     setIsLoading(false);
-    navigate("/student/setup");
+    setVerificationSent(true);
   };
 
   return (
@@ -68,9 +69,18 @@ function Signup() {
           <img src={bgImage} alt="Background" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black opacity-50"></div>
         </div>
+
         {!showCard ? (
           <div className="relative z-10">
             <FaSpinner className="animate-spin text-white text-4xl" />
+          </div>
+        ) : verificationSent ? (
+          <div className="relative z-10 bg-white p-5 rounded-lg shadow-lg w-full max-w-md m-3 transition-all duration-500 ease-in-out transform hover:scale-105">
+            <div className="text-center mt-6 p-4 bg-green-100 text-green-700 rounded-lg">
+              <p className="font-semibold">Verification link sent!</p>
+              <p className="mt-2">Please check your email to verify your account.</p>
+              <p className="mt-2">Once verified, you can <Link to="/student/login" className="text-blue-600 hover:underline">log in</Link>.</p>
+            </div>
           </div>
         ) : (
           <div className="relative z-10 bg-white p-5 rounded-lg shadow-lg w-full max-w-md m-3 transition-all duration-500 ease-in-out transform hover:scale-105">
@@ -90,9 +100,8 @@ function Signup() {
                       type="text"
                       id="username"
                       placeholder="Enter your username"
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.username ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.username ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   )}
                 />
@@ -113,9 +122,8 @@ function Signup() {
                       type="email"
                       id="email"
                       placeholder="Enter your email"
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.email ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   )}
                 />
@@ -136,9 +144,8 @@ function Signup() {
                       type={showPassword ? "text" : "password"}
                       id="password"
                       placeholder="Enter your password"
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
-                        errors.password ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.password ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   )}
                 />
@@ -166,9 +173,8 @@ function Signup() {
                       type={showPassword ? "text" : "password"}
                       id="confirmPassword"
                       placeholder="Confirm your password"
-                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
-                        errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                        }`}
                     />
                   )}
                 />

@@ -46,13 +46,30 @@ function Login() {
     
     // Add your login logic here
     localStorage.setItem("userToken", "yourTokenHere");
+    
+    // Check if it's the user's first login
+    const isFirstLogin = localStorage.getItem("userFirstLogin") === "true";
+    
     setIsLoading(false);
-    navigate("/student/dashboard");
+    
+    if (isFirstLogin) {
+      // If it's the first login, navigate to the user setup page
+      localStorage.setItem("userFirstLogin", "false");
+      navigate("/user-setup");
+    } else {
+      // If it's not the first login, navigate to the dashboard
+      navigate("/student/dashboard");
+    }
   };
 
   // Redirect user if already logged in
   if (isLoggedIn()) {
-    navigate("/student/dashboard");
+    const isFirstLogin = localStorage.getItem("userFirstLogin") === "true";
+    if (isFirstLogin) {
+      navigate("/student/setup");
+    } else {
+      navigate("/student/dashboard");
+    }
   }
 
   return (

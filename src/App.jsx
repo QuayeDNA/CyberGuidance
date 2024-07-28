@@ -16,6 +16,7 @@ const StudentSignup = lazy(() => import('./pages/students/Signup'));
 const StudentMain = lazy(() => import('./pages/students/Main'));
 const StudentSetup = lazy(() => import('./pages/students/SetupPage'));
 const StudentPersonalization = lazy(() => import('./pages/students/UserPersonalization'));
+const VerifyEmail = lazy(() => import('./pages/students/VerifyEmail'));
 
 // Counselor routes
 const CounselorLogin = lazy(() => import('./pages/counsellors/Login'));
@@ -32,7 +33,6 @@ const Notifications = lazy(() => import('./pages/admin/NotificationsCenter'));
 const Appointments = lazy(() => import('./pages/admin/AppointmentManagement'));
 
 
-
 function App() {
     return (
         <AuthProvider>
@@ -47,6 +47,7 @@ function App() {
 
                                 {/* Student routes */}
                                 <Route path="/student" element={<Navigate to="/student/login" replace />} />
+                                <Route path="/student/verify-email" element={<VerifyEmail />} />
                                 <Route path="/student/login" element={<StudentLogin />} />
                                 <Route path="/student/signup" element={<StudentSignup />} />
                                 <Route path="/student/setup" element={<StudentSetup />} />
@@ -58,7 +59,8 @@ function App() {
                                 <Route path="/counselor/login" element={<CounselorLogin />} />
                                 <Route path="/counselor/*" element={<CounselorMain />} />
 
-                                {/* Admin routes */}
+                                {/* Admin routes */} 
+                                <Route path="/admin/login" element={<AdminLogin />} />
                                 <Route path="/admin" element={<AdminLayout />}>
                                     <Route index element={<Navigate to="overview" replace />} />
                                     <Route path="overview" element={<Overview />} />
@@ -68,8 +70,7 @@ function App() {
                                     <Route path="settings" element={<SystemSettings />} />
                                     <Route path="notifications" element={<Notifications />} />
                                 </Route>
-                                <Route path="/admin/login" element={<AdminLogin />} />
-                                <Route path="*" element={<Navigate to="/admin" replace />} />
+                               
 
                                 {/* Catch-all route for 404 */}
                                 <Route path="*" element={<NotFound />} />
