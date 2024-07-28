@@ -41,7 +41,7 @@ const AdminDashboard = () => {
       {/* Sidebar for larger screens */}
       <div className={`bg-indigo-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out`}>
         <div className="flex items-center justify-between px-4">
-          <h2 className="text-2xl font-semibold">Admin Dashboard</h2>
+          <h2 className="text-xl font-semibold">Cyber-Counselling</h2>
           <button onClick={toggleSidebar} className="md:hidden">
             <FaTimes size={24} />
           </button>
