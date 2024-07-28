@@ -39,7 +39,7 @@ const AdminDashboard = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar for larger screens */}
-      <div className={`bg-indigo-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out`}>
+      <div className={`bg-indigo-800 z-[1000] text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out`}>
         <div className="flex items-center justify-between px-4">
           <h2 className="text-xl font-semibold">Cyber-Counselling</h2>
           <button onClick={toggleSidebar} className="md:hidden">
