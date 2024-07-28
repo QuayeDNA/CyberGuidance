@@ -55,7 +55,6 @@ function Signup() {
     await new Promise(resolve => setTimeout(resolve, 2000));
   
     // Store user data in localStorage
-    localStorage.setItem("userToken", "yourTokenHere");
     localStorage.setItem("userFirstLogin", "true");
   
     setIsLoading(false);
