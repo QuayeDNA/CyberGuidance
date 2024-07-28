@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { FaCalendar, FaClock, FaMapMarkerAlt, FaVideo, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
 
+
 const CounselorSessions = () => {
   const [clients, setClients] = useState([]);
   const [filter, setFilter] = useState('all');

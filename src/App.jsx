@@ -23,7 +23,15 @@ const CounselorMain = lazy(() => import('./pages/counsellors/Main'));
 
 // Admin routes
 const AdminLogin = lazy(() => import('./pages/admin/Login'));
-const AdminMain = lazy(() => import('./pages/admin/Main'));
+const AdminLayout = lazy(() => import('./pages/admin/Main'));
+const Overview = lazy(() => import('./pages/admin/Overview'));
+const SystemSettings = lazy(() => import('./pages/admin/SystemSettings'));
+const Users = lazy(() => import('./pages/admin/UserManagement'));
+const AnalyticsReports = lazy(() => import('./pages/admin/AnalyticsReports'));
+const Notifications = lazy(() => import('./pages/admin/NotificationsCenter'));
+const Appointments = lazy(() => import('./pages/admin/AppointmentManagement'));
+
+
 
 function App() {
     return (
@@ -51,9 +59,17 @@ function App() {
                                 <Route path="/counselor/*" element={<CounselorMain />} />
 
                                 {/* Admin routes */}
-                                <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+                                <Route path="/admin" element={<AdminLayout />}>
+                                    <Route index element={<Navigate to="overview" replace />} />
+                                    <Route path="overview" element={<Overview />} />
+                                    <Route path="users" element={<Users />} />
+                                    <Route path="appointments" element={<Appointments />} />
+                                    <Route path="analytics" element={<AnalyticsReports />} />
+                                    <Route path="settings" element={<SystemSettings />} />
+                                    <Route path="notifications" element={<Notifications />} />
+                                </Route>
                                 <Route path="/admin/login" element={<AdminLogin />} />
-                                <Route path="/admin/*" element={<AdminMain />} />
+                                <Route path="*" element={<Navigate to="/admin" replace />} />
 
                                 {/* Catch-all route for 404 */}
                                 <Route path="*" element={<NotFound />} />
