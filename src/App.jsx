@@ -60,9 +60,10 @@ function App() {
                                 <Route path="/counselor/*" element={<CounselorMain />} />
 
                                 {/* Admin routes */} 
-                                <Route path="/admin/login" element={<AdminLogin />} />
-                                <Route path="/admin" element={<AdminLayout />}>
-                                    <Route index element={<Navigate to="overview" replace />} />
+                                <Route path="/admin" element={<AdminLogin />} replace />
+                                <Route path="/admin/login" element={<AdminLogin />} replace />
+                                <Route path="/admin/*" element={<AdminLayout />}>
+                                    <Route index element={<Navigate to="overview" />} />
                                     <Route path="overview" element={<Overview />} />
                                     <Route path="users" element={<Users />} />
                                     <Route path="appointments" element={<Appointments />} />
