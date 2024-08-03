@@ -1,35 +1,68 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 
-// Create the context
 const AuthContext = createContext();
 
-// Create a provider component
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock function to login, in real scenarios you would fetch this from an API
-  const login = () => {
-    setIsAuthenticated(true);
+  useEffect(() => {
+    // Check if there's a token in localStorage and validate it
+    const token = localStorage.getItem('userToken');
+    if (token) {
+      validateToken(token);
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const validateToken = async (token) => {
+    try {
+      const response = await axios.post('https://cyber-guidance.onrender.com/user-info', {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data.user);
+    } catch (error) {
+      console.error('Token validation failed:', error);
+      localStorage.removeItem('userToken');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Mock function to logout
+  const login = async (email, password) => {
+    try {
+      const response = await axios.post('https://cyber-guidance.onrender.com/login', { email, password });
+      localStorage.setItem('userToken', response.data.token);
+      setUser(response.data.user);
+      return response.data;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
+  };
+
   const logout = () => {
-    setIsAuthenticated(false);
+    localStorage.removeItem('userToken');
+    setUser(null);
   };
 
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    login,
+    logout,
+    loading
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 AuthProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-// Hook to use the AuthContext
 export const useAuth = () => {
   return useContext(AuthContext);
 };

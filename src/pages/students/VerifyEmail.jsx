@@ -1,38 +1,34 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaSpinner, FaCheckCircle } from 'react-icons/fa';
+import { FaSpinner, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import axios from 'axios';
 
 function VerifyEmail() {
   const [isVerifying, setIsVerifying] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const verifyEmail = async () => {
-      // Get the token from the URL
-      const params = new URLSearchParams(location.search);
-      const token = params.get('token');
+      const token = new URLSearchParams(location.search).get('token');
 
       if (token) {
         try {
-          // Simulate API call to verify the token
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          const response = await axios.get(`https://cyber-guidance.onrender.com/verify/${token}`);
           
-          // If verification is successful
-          setIsVerified(true);
-          
-          // Redirect to login page after 3 seconds
-          setTimeout(() => {
-            navigate('/student/login');
-          }, 3000);
+          if (response.status === 200) {
+            setIsVerified(true);
+            setTimeout(() => {
+              navigate('/student/login');
+            }, 3000);
+          }
         } catch (error) {
-          // Handle verification error
-          console.error('Verification failed:', error);
+          setError(error.response?.data?.message || 'Verification failed. Please try again.');
         }
       } else {
-        // Handle case where token is not present
-        console.error('No verification token found');
+        setError('No verification token found');
       }
       setIsVerifying(false);
     };
@@ -58,8 +54,15 @@ function VerifyEmail() {
           </>
         ) : (
           <>
+            <FaExclamationTriangle className="text-red-500 text-4xl mx-auto mb-4" />
             <h2 className="text-2xl font-semibold mb-2 text-red-500">Verification Failed</h2>
-            <p className="text-gray-600">We couldn&apos;t verify your email. Please try again or contact support.</p>
+            <p className="text-gray-600">{error}</p>
+            <button 
+              onClick={() => navigate('/student/login')} 
+              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+            >
+              Go to Login
+            </button>
           </>
         )}
       </div>

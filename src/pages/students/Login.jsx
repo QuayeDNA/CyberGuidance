@@ -5,11 +5,12 @@ import * as yup from "yup";
 import Footer from "../../components/Footer";
 import bgImage from "../../assets/Counselling.jpg";
 import { useNavigate, Link } from "react-router-dom";
-import { FaSpinner } from "react-icons/fa"; // Import the spinner icon
+import { FaSpinner } from "react-icons/fa";
+import axios from "axios"; // Make sure to install axios: npm install axios
 
 // Define the validation schema
 const schema = yup.object().shape({
-  username: yup.string().required("Username is required"),
+  email: yup.string().email("Invalid email format").required("Email is required"),
   password: yup.string().required("Password is required"),
 });
 
@@ -17,6 +18,7 @@ function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const [error, setError] = useState("");
   const {
     control,
     handleSubmit,
@@ -26,7 +28,6 @@ function Login() {
   });
 
   useEffect(() => {
-    // Simulate a delay before showing the login card
     const timer = setTimeout(() => {
       setShowCard(true);
     }, 1000);
@@ -34,42 +35,60 @@ function Login() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Assuming you have a function to check if the user is logged in
   const isLoggedIn = () => {
     return localStorage.getItem("userToken") !== null;
   };
 
   const handleLogin = async (data) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Add your login logic here
-    localStorage.setItem("userToken", "yourTokenHere");
-    
-    // Check if it's the user's first login
-    const isFirstLogin = localStorage.getItem("userFirstLogin") === "true";
-    
-    setIsLoading(false);
-    
-    if (isFirstLogin) {
-      // If it's the first login, navigate to the user setup page
-      localStorage.setItem("userFirstLogin", "false");
-      navigate("/user-setup");
-    } else {
-      // If it's not the first login, navigate to the dashboard
-      navigate("/student/dashboard");
+    setError("");
+
+    try {
+      const response = await axios.post("https://cyber-guidance.onrender.com/login", {
+        email: data.email,
+        password: data.password,
+      });
+
+      localStorage.setItem("userToken", response.data.token);
+      
+      if (response.data.isStudent) {
+        const userInfoResponse = await axios.post("https://cyber-guidance.onrender.com/user-info", {
+          email: data.email,
+        });
+
+        const isFirstLogin = !userInfoResponse.data.user.personalInfo;
+        
+        if (isFirstLogin) {
+          navigate("/student/setup");
+        } else {
+          navigate("/student/dashboard");
+        }
+      } else if (response.data.isCounselor) {
+        navigate("/counselor/dashboard");
+      } else if (response.data.isAdmin) {
+        navigate("/admin/dashboard");
+      }
+    } catch (error) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        setError(error.response.data.message || "An error occurred during login.");
+      } else if (error.request) {
+        // The request was made but no response was received
+        setError("No response received from the server. Please try again.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setError("An error occurred. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Redirect user if already logged in
   if (isLoggedIn()) {
-    const isFirstLogin = localStorage.getItem("userFirstLogin") === "true";
-    if (isFirstLogin) {
-      navigate("/student/setup");
-    } else {
-      navigate("/student/dashboard");
-    }
+    navigate("/student/dashboard");
+    return null;
   }
 
   return (
@@ -91,28 +110,33 @@ function Login() {
             <p className="text-center text-gray-600 mb-6">
               We&apos;re here to support you. Please log in to continue.
             </p>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span className="block sm:inline">{error}</span>
+              </div>
+            )}
             <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
               <div>
-                <label htmlFor="username" className="block text-gray-700 font-semibold mb-2">
-                  Username
+                <label htmlFor="email" className="block text-gray-700 font-semibold mb-2">
+                  Email
                 </label>
                 <Controller
-                  name="username"
+                  name="email"
                   control={control}
                   render={({ field }) => (
                     <input
                       {...field}
-                      type="text"
-                      id="username"
+                      type="email"
+                      id="email"
                       className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.username ? "border-red-500" : "border-gray-300"
+                        errors.email ? "border-red-500" : "border-gray-300"
                       }`}
-                      placeholder="Enter your username"
+                      placeholder="Enter your email"
                     />
                   )}
                 />
-                {errors.username && (
-                  <p className="text-red-500 text-sm mt-1">{errors.username.message}</p>
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
                 )}
               </div>
               <div>

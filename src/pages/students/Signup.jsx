@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import axios from "axios";
 import Footer from "../../components/Footer";
 import bgImage from "../../assets/Counselling.jpg";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
 
 // Define the validation schema
@@ -27,6 +28,8 @@ function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [verificationSent, setVerificationSent] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const {
     control,
@@ -37,7 +40,6 @@ function Signup() {
   });
 
   useEffect(() => {
-    // Simulate a delay before showing the signup card
     const timer = setTimeout(() => {
       setShowCard(true);
     }, 1000);
@@ -49,16 +51,47 @@ function Signup() {
     setShowPassword(!showPassword);
   };
 
-  const handleSignup = async (data) => {
+  const handleSignup = async (data, retryCount = 0) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    setError("");
   
-    // Store user data in localStorage
-    localStorage.setItem("userFirstLogin", "true");
+    try {
+      const response = await axios.post("https://cyber-guidance.onrender.com/signup", {
+        username: data.username,
+        email: data.email,
+        password: data.password,
+      }, {
+        timeout: 20000 // Increased to 20 seconds
+      });
   
-    setIsLoading(false);
-    setVerificationSent(true);
+      setIsLoading(false);
+      setVerificationSent(true);
+      
+      localStorage.setItem("userToken", response.data.token);
+  
+      setTimeout(() => {
+        navigate("/student/verify-email");
+      }, 3000);
+    } catch (error) {
+      console.error("Signup error:", error);
+      
+      if (error.code === 'ECONNABORTED' && retryCount < 2) {
+        // Retry up to 2 times on timeout
+        setError(`Request timed out. Retrying... (Attempt ${retryCount + 1} of 3)`);
+        setTimeout(() => handleSignup(data, retryCount + 1), 2000);
+      } else {
+        setIsLoading(false);
+        if (error.response) {
+          setError(error.response.data.message || "An error occurred during signup.");
+        } else if (error.request) {
+          setError("No response received from the server. Please try again later.");
+        } else if (error.code === 'ECONNABORTED') {
+          setError("The request timed out. The server might be experiencing high load. Please try again later.");
+        } else {
+          setError("An unexpected error occurred. Please try again.");
+        }
+      }
+    }
   };
 
   return (
@@ -78,13 +111,27 @@ function Signup() {
             <div className="text-center mt-6 p-4 bg-green-100 text-green-700 rounded-lg">
               <p className="font-semibold">Verification link sent!</p>
               <p className="mt-2">Please check your email to verify your account.</p>
-              <p className="mt-2">Once verified, you can <Link to="/student/login" className="text-blue-600 hover:underline">log in</Link>.</p>
+              <p className="mt-2">Redirecting to verification page...</p>
             </div>
           </div>
         ) : (
           <div className="relative z-10 bg-white p-5 rounded-lg shadow-lg w-full max-w-md m-3 transition-all duration-500 ease-in-out transform hover:scale-105">
             <h2 className="xl:text-3xl md:text-2xl sm:text-xl font-bold text-center mb-6 text-blue-600">Sign Up for Cyber-Counselling</h2>
             <p className="text-center text-gray-600 mb-6">Create your account to get started.</p>
+            {error && (
+  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <span className="block sm:inline">{error}</span>
+    {!error.includes("Retrying...") && (
+      <button
+        onClick={() => handleSubmit(handleSignup)()}
+        className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+      >
+        Retry Signup
+      </button>
+    )}
+  </div>
+)}
+
             <form onSubmit={handleSubmit(handleSignup)} className="space-y-4">
               <div>
                 <label htmlFor="username" className="block text-gray-700 font-semibold mb-2">
@@ -188,22 +235,21 @@ function Signup() {
                   <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
                 )}
               </div>
-
               <button
-                type="submit"
-                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" />
-                    Signing up...
-                  </>
-                ) : (
-                  "Sign Up"
-                )}
-              </button>
-            </form>
+    type="submit"
+    className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
+    disabled={isLoading}
+  >
+    {isLoading ? (
+      <>
+        <FaSpinner className="animate-spin mr-2" />
+        {error.includes("Retrying...") ? "Retrying..." : "Signing up..."}
+      </>
+    ) : (
+      "Sign Up"
+    )}
+  </button>
+</form>
             <p className="text-center text-sm text-gray-600 mt-6">
               By signing up, you agree to our{" "}
               <Link to="/terms" className="text-blue-500 hover:underline">
