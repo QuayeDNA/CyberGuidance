@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 const Landing = lazy(() => import('./pages/Landing'));
 const ComingSoon = lazy(() => import('./components/ComingSoon'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Unauthorized = lazy(() => import('./components/Unauthorized'));
 
 // Student routes
 const StudentLogin = lazy(() => import('./pages/students/Login'));
@@ -20,10 +21,12 @@ const VerifyEmail = lazy(() => import('./pages/students/VerifyEmail'));
 
 // Counselor routes
 const CounselorLogin = lazy(() => import('./pages/counsellors/Login'));
+const CounselorSignup = lazy(() => import('./pages/counsellors/Signup'));
 const CounselorMain = lazy(() => import('./pages/counsellors/Main'));
 
 // Admin routes
 const AdminLogin = lazy(() => import('./pages/admin/Login'));
+const AdminSignup = lazy(() => import('./pages/admin/Signup')); 
 const AdminLayout = lazy(() => import('./pages/admin/Main'));
 const Overview = lazy(() => import('./pages/admin/Overview'));
 const SystemSettings = lazy(() => import('./pages/admin/SystemSettings'));
@@ -31,6 +34,7 @@ const Users = lazy(() => import('./pages/admin/UserManagement'));
 const AnalyticsReports = lazy(() => import('./pages/admin/AnalyticsReports'));
 const Notifications = lazy(() => import('./pages/admin/NotificationsCenter'));
 const Appointments = lazy(() => import('./pages/admin/AppointmentManagement'));
+
 
 
 function App() {
@@ -48,7 +52,9 @@ function App() {
                                 <Route path="/student/login" element={<StudentLogin />} />
                                 <Route path="/student/signup" element={<StudentSignup />} />
                                 <Route path="/counselor/login" element={<CounselorLogin />} />
+                                <Route path="/counselor/signup" element={<CounselorSignup />} />
                                 <Route path="/admin/login" element={<AdminLogin />} />
+                                <Route path="/admin/signup" element={<AdminSignup />} />
 
                                 {/* Protected Student routes */}
                                 <Route path="/student" element={<ProtectedRoute roles={['student']}><Navigate to="/student/dashboard" replace /></ProtectedRoute>} />
@@ -78,6 +84,9 @@ function App() {
 
                                 {/* Catch-all route for 404 */}
                                 <Route path="*" element={<NotFound />} />
+
+                                {/* Catch-all route for 401 */}
+                                <Route path="/unauthorized" element={<Unauthorized />} />
                             </Routes>
                         </Suspense>
                     </Router>

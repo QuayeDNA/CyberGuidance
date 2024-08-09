@@ -4,6 +4,7 @@ import * as yup from 'yup';
 import { useState, useEffect } from 'react';
 import { FaInfoCircle, FaCheck, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Background from "../../components/Background";
 
 const schema = yup.object().shape({
@@ -27,6 +28,7 @@ const SetupPage = () => {
   const [useTimer, setUseTimer] = useState(true);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
 
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
@@ -54,14 +56,35 @@ const SetupPage = () => {
   };
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
+    setApiError(null);
     try {
-      console.log(data);
+      const response = await axios.post('https://cyber-guidance.onrender.com/personal-info', data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming you store the token in localStorage
+        }
+      });
+      console.log(response.data);
       setSubmissionSuccess(true);
       setTimeout(() => {
         navigate('/student/user-personalization');
       }, 2000);
     } catch (error) {
-      console.log(error);
+      console.error('API Error:', error);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        setApiError(error.response.data.message || 'An error occurred while submitting your information.');
+      } else if (error.request) {
+        // The request was made but no response was received
+        setApiError('No response received from the server. Please try again later.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        setApiError('An error occurred while submitting your information. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,6 +123,12 @@ const SetupPage = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {apiError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong className="font-bold">Error!</strong>
+                <span className="block sm:inline"> {apiError}</span>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Controller
@@ -262,7 +291,9 @@ const SetupPage = () => {
 
             <div className="grid grid-cols-2 gap-4 mt-8">
               <button type="button" onClick={handleClose} className="px-6 py-3 bg-gray-300 rounded-full hover:bg-gray-400 transition-colors text-gray-700 font-semibold">Skip</button>
-              <button type="submit" className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-semibold">Continue</button>
+              <button type="submit" className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-semibold">
+                {isLoading ? <FaSpinner className="animate-spin mx-auto" /> : 'Continue'}
+              </button>
             </div>
           </form>
         )}

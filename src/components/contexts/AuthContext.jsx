@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
 
   const validateToken = async (token) => {
     try {
-      const response = await axios.post('https://cyber-guidance.onrender.com/user-info', {}, {
+      const response = await axios.get('https://cyber-guidance.onrender.com/api/user-info', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data.user);

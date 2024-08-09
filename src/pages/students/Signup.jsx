@@ -54,27 +54,27 @@ function Signup() {
   const handleSignup = async (data, retryCount = 0) => {
     setIsLoading(true);
     setError("");
-  
+
     try {
-      const response = await axios.post("https://cyber-guidance.onrender.com/signup", {
+      const response = await axios.post("https://cyber-guidance.onrender.com/api/signup", {
         username: data.username,
         email: data.email,
         password: data.password,
       }, {
-        timeout: 20000 // Increased to 20 seconds
+
       });
-  
+
       setIsLoading(false);
       setVerificationSent(true);
-      
+
       localStorage.setItem("userToken", response.data.token);
-  
+
       setTimeout(() => {
-        navigate("/student/verify-email");
+        navigate("/student/login");
       }, 3000);
     } catch (error) {
       console.error("Signup error:", error);
-      
+
       if (error.code === 'ECONNABORTED' && retryCount < 2) {
         // Retry up to 2 times on timeout
         setError(`Request timed out. Retrying... (Attempt ${retryCount + 1} of 3)`);
@@ -119,18 +119,18 @@ function Signup() {
             <h2 className="xl:text-3xl md:text-2xl sm:text-xl font-bold text-center mb-6 text-blue-600">Sign Up for Cyber-Counselling</h2>
             <p className="text-center text-gray-600 mb-6">Create your account to get started.</p>
             {error && (
-  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-    <span className="block sm:inline">{error}</span>
-    {!error.includes("Retrying...") && (
-      <button
-        onClick={() => handleSubmit(handleSignup)()}
-        className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-      >
-        Retry Signup
-      </button>
-    )}
-  </div>
-)}
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span className="block sm:inline">{error}</span>
+                {!error.includes("Retrying...") && (
+                  <button
+                    onClick={() => handleSubmit(handleSignup)()}
+                    className="mt-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Retry Signup
+                  </button>
+                )}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit(handleSignup)} className="space-y-4">
               <div>
@@ -236,20 +236,20 @@ function Signup() {
                 )}
               </div>
               <button
-    type="submit"
-    className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
-    disabled={isLoading}
-  >
-    {isLoading ? (
-      <>
-        <FaSpinner className="animate-spin mr-2" />
-        {error.includes("Retrying...") ? "Retrying..." : "Signing up..."}
-      </>
-    ) : (
-      "Sign Up"
-    )}
-  </button>
-</form>
+                type="submit"
+                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    {error.includes("Retrying...") ? "Retrying..." : "Signing up..."}
+                  </>
+                ) : (
+                  "Sign Up"
+                )}
+              </button>
+            </form>
             <p className="text-center text-sm text-gray-600 mt-6">
               By signing up, you agree to our{" "}
               <Link to="/terms" className="text-blue-500 hover:underline">

@@ -16,7 +16,7 @@ function VerifyEmail() {
 
       if (token) {
         try {
-          const response = await axios.get(`https://cyber-guidance.onrender.com/verify/${token}`);
+          const response = await axios.get(`https://cyber-guidance.onrender.com/api/verify/${token}`);
           
           if (response.status === 200) {
             setIsVerified(true);

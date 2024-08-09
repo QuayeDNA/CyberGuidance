@@ -8,6 +8,7 @@ const IssueSelectionPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [preparationStage, setPreparationStage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
 
     const issues = [
@@ -42,10 +43,33 @@ const IssueSelectionPage = () => {
     ];
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1500);
-        return () => clearTimeout(timer);
+        const fetchAreaOfInterest = async () => {
+            try {
+                const response = await fetch('https://cyber-guidance.onrender.com/user-info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ email: localStorage.getItem('userEmail') }) // Assuming you store the user's email in localStorage
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user info');
+                }
+
+                const data = await response.json();
+                if (data.user && data.user.areaOfInterest) {
+                    setSelectedIssues(data.user.areaOfInterest);
+                }
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAreaOfInterest();
     }, []);
 
     const toggleIssue = (issue) => {
@@ -56,9 +80,31 @@ const IssueSelectionPage = () => {
         );
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         setIsSubmitting(true);
-        simulatePreparation();
+        setErrorMessage('');
+        try {
+            const response = await fetch('https://cyber-guidance.onrender.com/area-of-interest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ areaOfInterest: selectedIssues })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update area of interest');
+            }
+
+            const data = await response.json();
+            console.log(data.message);
+            simulatePreparation();
+        } catch (error) {
+            console.error('Error updating area of interest:', error);
+            setIsSubmitting(false);
+            setErrorMessage('Failed to update area of interest. Please try again.');
+        }
     };
 
     const simulatePreparation = () => {
@@ -109,16 +155,18 @@ const IssueSelectionPage = () => {
                             Choose the topics you&apos;d like to focus on. This will help us tailor your experience and recommend the best counselors for you.
                         </p>
                     </div>
+                    {errorMessage && (
+                        <p className="text-red-500 text-center mt-4">{errorMessage}</p>
+                    )}
                     <div className="mt-8 space-y-6">
                         <div className="flex flex-wrap gap-3 justify-center">
                             {issues.map((issue) => (
                                 <button
                                     key={issue.name}
-                                    className={`px-4 py-2 rounded-full transition-all duration-300 ease-in-out ${
-                                        selectedIssues.includes(issue.name) 
-                                            ? `${issue.color} text-white shadow-lg transform scale-105` 
+                                    className={`px-4 py-2 rounded-full transition-all duration-300 ease-in-out ${selectedIssues.includes(issue.name)
+                                            ? `${issue.color} text-white shadow-lg transform scale-105`
                                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                    }`}
+                                        }`}
                                     onClick={() => toggleIssue(issue.name)}
                                 >
                                     {issue.name}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FaBell, FaSignOutAlt, FaBars, FaUserCircle, FaUserAlt, FaHome, FaComment, FaRegNewspaper } from 'react-icons/fa';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 function Navbar() {
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
@@ -64,12 +65,32 @@ function Navbar() {
         setShowNotificationDropdown(false);
     };
 
-    const handleLogout = () => {
-        // Implement logout logic here
-        // For example:
-        localStorage.removeItem('userToken');
-        navigate('/student/login');
+    const handleLogout = async () => {
+        try {
+            // Get the token from localStorage
+            const token = localStorage.getItem('userToken');
+
+            // Make a request to the logout endpoint
+            await axios.get('https://cyber-guidance.onrender.com/logout', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            // Remove the token from localStorage
+            localStorage.removeItem('userToken');
+
+            // Navigate to the login page
+            navigate('/student/login');
+        } catch (error) {
+            console.error('Logout Error:', error);
+            // Handle any errors (e.g., show an error message to the user)
+            // For now, we'll still remove the token and redirect even if the API call fails
+            localStorage.removeItem('userToken');
+            navigate('/student/login');
+        }
     };
+
 
     const markAsRead = (id) => {
         setNotifications(notifications.map(notif => 

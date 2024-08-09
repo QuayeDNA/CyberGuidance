@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route } from "react-router-dom";
 import Navbar from "../../components/studentsApp/Navbar";
 import AppNavbar from "../../components/studentsApp/AppNavbar"
@@ -8,13 +8,43 @@ import CounselorProfile from "./CounselorProfile";
 import Messaging from "./Messaging";
 import User from "./User";
 import Articles from './Articles';
-import PinEntry from '../../components/studentsApp/PinEntry'; // Import the new PinEntry component
+import PinEntry from '../../components/studentsApp/PinEntry';
+import CreatePin from '../../components/studentsApp/CreatePin'; // Import the new CreatePin component
 
 function Main() {
     const [isPinVerified, setIsPinVerified] = useState(false);
+    const [isPinSet, setIsPinSet] = useState(false);
+    const [showCreatePin, setShowCreatePin] = useState(false);
+
+    useEffect(() => {
+        const userPin = localStorage.getItem('userPin');
+        setIsPinSet(!!userPin);
+        if (!userPin) {
+            setShowCreatePin(true);
+        }
+    }, []);
 
     const handleCorrectPin = () => {
         setIsPinVerified(true);
+    };
+
+    const handlePinCreated = () => {
+        setIsPinSet(true);
+        setShowCreatePin(false);
+    };
+
+    const handleSkipPinCreation = () => {
+        setShowCreatePin(false);
+    };
+
+    const renderMessagingComponent = () => {
+        if (showCreatePin) {
+            return <CreatePin onPinCreated={handlePinCreated} onSkip={handleSkipPinCreation} />;
+        }
+        if (isPinSet && !isPinVerified) {
+            return <PinEntry onCorrectPin={handleCorrectPin} />;
+        }
+        return <Messaging />;
     };
 
     return (
@@ -26,9 +56,7 @@ function Main() {
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="counselors" element={<Counselors />} />
                     <Route path="counselor/:id" element={<CounselorProfile />} />
-                    <Route path="message" element={
-                        isPinVerified ? <Messaging /> : <PinEntry onCorrectPin={handleCorrectPin} />
-                    } />
+                    <Route path="message" element={renderMessagingComponent()} />
                     <Route path="articles" element={<Articles />} />
                     <Route path="articles/:id" element={<Articles />} />
                     <Route path="/" element={<Dashboard />} />

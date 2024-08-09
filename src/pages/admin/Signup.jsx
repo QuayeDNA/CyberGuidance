@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaEnvelope, FaLock, FaSpinner } from 'react-icons/fa';
+import { FaUser, FaLock, FaEnvelope, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const AdminLogin = () => {
+const AdminSignup = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,22 +18,24 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://cyber-guidance.onrender.com/login', {
+      const response = await axios.post('https://cyber-guidance.onrender.com/admin-signup', {
+        username,
         email,
         password
       });
 
-      const { isAdmin, token } = response.data;
-
-      if (isAdmin) {
-        // Store the token in localStorage or a secure cookie
-        localStorage.setItem('adminToken', token);
-        navigate('/admin/overview');
-      } else {
-        throw new Error('Not authorized as admin');
-      }
+      const { message, token } = response.data;
+      
+      // Store the token in localStorage or a secure cookie
+      localStorage.setItem('adminToken', token);
+      
+      // Show success message
+      alert(message);
+      
+      // Navigate to admin overview or login page
+      navigate('/admin/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || 'Signup failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -52,9 +55,28 @@ const AdminLogin = () => {
           transition={{ delay: 0.2 }}
           className="text-3xl font-bold mb-6 text-center text-indigo-800"
         >
-          Admin Login
+          Admin Signup
         </motion.h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              Username
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaUser className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                id="username"
+                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 pr-3 py-2 sm:text-sm border-gray-300 rounded-md"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+          </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -110,17 +132,12 @@ const AdminLogin = () => {
             {isLoading ? (
               <FaSpinner className="animate-spin mr-2" />
             ) : null}
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            {isLoading ? 'Signing Up...' : 'Sign Up'}
           </button>
         </form>
         <div className="mt-4 text-center">
-          <a href="#" className="text-sm text-indigo-600 hover:text-indigo-500">
-            Forgot your password?
-          </a>
-        </div>
-        <div className="mt-4 text-center">
-          <a href="/admin/signup" className="text-sm text-indigo-600 hover:text-indigo-500">
-            Don&apos;t have an account? Sign up
+          <a href="/admin/login" className="text-sm text-indigo-600 hover:text-indigo-500">
+            Already have an account? Log in
           </a>
         </div>
       </div>
@@ -128,4 +145,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default AdminSignup;
