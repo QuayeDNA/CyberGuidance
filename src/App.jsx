@@ -48,7 +48,7 @@ function App() {
                                 {/* Public routes */}
                                 <Route path="/" element={<Landing />} />
                                 <Route path="/coming-soon" element={<ComingSoon />} />
-                                <Route path="/student/verify-email" element={<VerifyEmail />} />
+                                <Route path="/verify-email" element={<VerifyEmail />} />
                                 <Route path="/student/login" element={<StudentLogin />} />
                                 <Route path="/student/signup" element={<StudentSignup />} />
                                 <Route path="/counselor/login" element={<CounselorLogin />} />

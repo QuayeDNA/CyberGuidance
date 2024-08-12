@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import counselorsData from '../../components/data/counselorsData';
-import { FaSpinner, FaCheck, FaStar, FaCalendarAlt, FaClock, FaExclamationTriangle } from 'react-icons/fa';
+import { FaStar, FaCalendarAlt, FaClock, FaExclamationTriangle } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CounselorProfile = () => {
@@ -9,7 +9,6 @@ const CounselorProfile = () => {
     const navigate = useNavigate();
     const [counselor, setCounselor] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [bookingStatus, setBookingStatus] = useState('booking');
     const [rating, setRating] = useState(0);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [reportReason, setReportReason] = useState('');
@@ -50,18 +49,6 @@ const CounselorProfile = () => {
         );
     }
 
-    const handleBookSession = () => {
-        setIsModalOpen(true);
-        setBookingStatus('booking');
-        setTimeout(() => {
-            setBookingStatus('success');
-        }, 3000);
-    };
-
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setBookingStatus('booking');
-    };
 
     const handleRating = (value) => {
         setRating(value);
@@ -78,10 +65,7 @@ const CounselorProfile = () => {
         setReportReason('');
     };
 
-    const cancelBooking = () => {
-        localStorage.removeItem('bookedCounselor');
-        navigate('/student/counselors');
-    };
+
 
     return (
         <motion.div
@@ -152,69 +136,10 @@ const CounselorProfile = () => {
                                 <span>9:00 AM - 5:00 PM</span>
                             </div>
                         </div>
-                        <div className="flex justify-between items-center mt-4">
-                        <button 
-                            className="bg-red-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-red-600 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
-                            onClick={cancelBooking}
-                        >
-                            Cancel Booking
-                        </button>
-                    </div>
-                        <button 
-                            className="bg-indigo-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
-                            onClick={handleBookSession}
-                        >
-                            Book a Session
-                        </button>
+                
                     </div>
                 </div>
             </div>
-
-            <AnimatePresence>
-                {isModalOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                        onClick={closeModal}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 50 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 50 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            className="bg-white p-8 rounded-lg shadow-xl text-center max-w-md mx-4"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {bookingStatus === 'booking' ? (
-                                <>
-                                    <FaSpinner className="animate-spin text-5xl text-indigo-600 mx-auto mb-4" />
-                                    <p className="text-xl font-semibold mb-2">Booking your session...</p>
-                                    <p className="text-gray-600">Please wait while we connect you with {counselor.name}.</p>
-                                </>
-                            ) : (
-                                <>
-                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <FaCheck className="text-3xl text-green-500" />
-                                    </div>
-                                    <h3 className="text-2xl font-bold mb-2">Booking Successful!</h3>
-                                    <p className="text-gray-600 mb-4">
-                                        {counselor.name} has been notified of your request. You will receive a confirmation email shortly with further details about your session.
-                                    </p>
-                                    <button 
-                                        className="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 focus:outline-none"
-                                        onClick={closeModal}
-                                    >
-                                        Close
-                                    </button>
-                                </>
-                            )}
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
              {/* Report Modal */}
              <AnimatePresence>
                 {isReportModalOpen && (

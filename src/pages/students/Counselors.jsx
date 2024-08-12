@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import counselorsData from '../../components/data/counselorsData';
 import { FaSearch } from 'react-icons/fa';
@@ -7,15 +7,6 @@ const Counselors = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [bookedCounselor, setBookedCounselor] = useState(null);
     const navigate = useNavigate();
-
-    useEffect(() => {
-        // Check local storage for a booked counselor
-        const storedCounselor = localStorage.getItem('bookedCounselor');
-        if (storedCounselor) {
-            setBookedCounselor(JSON.parse(storedCounselor));
-            navigate(`/student/counselor/${JSON.parse(storedCounselor).id}`);
-        }
-    }, [navigate]);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -31,9 +22,6 @@ const Counselors = () => {
         navigate(`/student/counselor/${counselor.id}`);
     };
 
-    if (bookedCounselor) {
-        return null; // The navigation will handle redirecting to CounselorProfile
-    }
 
     return (
         <div className="container mx-auto px-4">

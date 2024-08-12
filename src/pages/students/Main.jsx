@@ -10,6 +10,7 @@ import User from "./User";
 import Articles from './Articles';
 import PinEntry from '../../components/studentsApp/PinEntry';
 import CreatePin from '../../components/studentsApp/CreatePin'; // Import the new CreatePin component
+import Appointment from "./Appointment"
 
 function Main() {
     const [isPinVerified, setIsPinVerified] = useState(false);
@@ -61,6 +62,7 @@ function Main() {
                     <Route path="articles/:id" element={<Articles />} />
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/user" element={<User />} />
+                    <Route path='/appointment' element={<Appointment />} />
                 </Routes>
             </main>
             

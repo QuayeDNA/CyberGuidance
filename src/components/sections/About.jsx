@@ -1,26 +1,32 @@
+import compassionImg from '../../assets/Counselling-1.jpg';
+import professionalismImg from '../../assets/Counselling-3.jpg';
+import personalizationImg from '../../assets/Counselling.jpg';
+import supportImg from '../../assets/Counselling-2.jpg';
+
 const About = () => {
     const missionValues = [
         {
             title: 'Compassion',
             description: 'We approach every individual with empathy and compassion, fostering a safe and supportive environment.',
-            image: 'https://picsum.photos/500', // Replace with actual URL
+            image: compassionImg,
         },
         {
             title: 'Professionalism',
             description: 'Our counselors adhere to the highest standards of professionalism, ensuring quality care and guidance.',
-            image: 'https://picsum.photos/500', // Replace with actual URL
+            image: professionalismImg,
         },
         {
             title: 'Personalization',
             description: 'We tailor our counseling approach to meet your unique needs, providing personalized solutions and support.',
-            image: 'https://picsum.photos/500', // Replace with actual URL
+            image: personalizationImg,
         },
         {
             title: 'Support',
             description: 'We are here to support students and staff through any challenges, offering a listening ear and expert advice.',
-            image: 'https://picsum.photos/500' // Replace with actual URL
+            image: supportImg
         }
     ];
+
 
     return (
         <main>

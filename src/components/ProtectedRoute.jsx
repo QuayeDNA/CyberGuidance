@@ -1,22 +1,32 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { useAuth } from './contexts/AuthContext';
+import Loading from './LoadingComponent';
 
-const ProtectedRoute = ({ children, roles }) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute = ({ children, roles = [] }) => {
+  const { userData, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
-    return <div>Loading...</div>; // Or your loading component
+    return <Loading />;
   }
 
-  if (!user) {
-    // Redirect to if not authenticated
-    return <Navigate to="/" state={{ from: location }} replace />;
+  if (!userData || !userData.token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (roles && !roles.includes(user.role)) {
-    // Redirect to unauthorized page if user doesn't have required role
+  // If no roles are specified, allow access
+  if (roles.length === 0) {
+    return children;
+  }
+
+  const hasAllowedRole = (
+    (roles.includes('student') && userData.isStudent) ||
+    (roles.includes('counselor') && userData.isCounselor) ||
+    (roles.includes('admin') && userData.isAdmin)
+  );
+
+  if (!hasAllowedRole) {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -25,7 +35,11 @@ const ProtectedRoute = ({ children, roles }) => {
 
 ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
-  roles: PropTypes.arrayOf(PropTypes.string),
+  roles: PropTypes.arrayOf(PropTypes.oneOf(['student', 'counselor', 'admin'])),
+};
+
+ProtectedRoute.defaultProps = {
+  roles: [],
 };
 
 export default ProtectedRoute;

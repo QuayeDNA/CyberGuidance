@@ -7,6 +7,7 @@ import bgImage from "../../assets/Counselling.jpg";
 import { useNavigate, Link } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
 import axios from "axios";
+import { useAuth } from '../../components/contexts/AuthContext';
 
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email format").required("Email is required"),
@@ -18,8 +19,9 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [error, setError] = useState("");
-  const [isUnverified, setIsUnverified] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const { setUserData } = useAuth();
+  // const [isUnverified, setIsUnverified] = useState(false);
+
   const {
     control,
     handleSubmit,
@@ -43,41 +45,31 @@ function Login() {
   const handleLogin = async (data) => {
     setIsLoading(true);
     setError("");
-    setIsUnverified(false);
-
+  
     try {
+      console.log("Attempting login...");
       const response = await axios.post("https://cyber-guidance.onrender.com/api/login", {
         email: data.email,
         password: data.password,
       });
-
-      if (!response.data.isVerified) {
-        setIsUnverified(true);
-        setUnverifiedEmail(data.email);
-        setIsLoading(false);
-        return;
-      }
-
-      localStorage.setItem("userToken", response.data.token);
+  
+      console.log("Login response:", response.data);
       
+      // Store the entire response data, not just the token
+      setUserData(response.data);
+  
       if (response.data.isStudent) {
-        const userInfoResponse = await axios.get("https://cyber-guidance.onrender.com/api/user-info", {
-          email: data.email,
-        });
-
-        const isFirstLogin = !userInfoResponse.data.user.personalInfo;
-        
-        if (isFirstLogin) {
-          navigate("/student/setup");
-        } else {
-          navigate("/student/dashboard");
-        }
+        navigate("/student/dashboard");
       } else if (response.data.isCounselor) {
         navigate("/counselor/dashboard");
       } else if (response.data.isAdmin) {
         navigate("/admin/dashboard");
+      } else {
+        console.error("Unknown user type");
+        setError("Unknown user type. Please contact support.");
       }
     } catch (error) {
+      console.error("Login error:", error);
       if (error.response) {
         setError(error.response.data.message || "An error occurred during login.");
       } else if (error.request) {
@@ -89,20 +81,19 @@ function Login() {
       setIsLoading(false);
     }
   };
-
-  const handleResendVerification = async () => {
-    setIsLoading(true);
-    try {
-      await axios.post("https://cyber-guidance.onrender.com/api/resend-verification", {
-        email: unverifiedEmail,
-      });
-      setError("Verification email resent. Please check your inbox.");
-    } catch (error) {
-      setError("Failed to resend verification email. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleResendVerification = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     await axios.post("https://cyber-guidance.onrender.com/api/resend-verification", {
+  //       email: unverifiedEmail,
+  //     });
+  //     setError("Verification email resent. Please check your inbox.");
+  //   } catch (error) {
+  //     setError("Failed to resend verification email. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   if (isLoggedIn()) {
     navigate("/student/dashboard");
@@ -133,7 +124,7 @@ function Login() {
                 <span className="block sm:inline">{error}</span>
               </div>
             )}
-            {isUnverified ? (
+            {/* {isUnverified ? (
               <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4" role="alert">
                 <p className="font-bold">Account not verified</p>
                 <p>Please check your email for the verification link. If you can&apos;t find it, you can:</p>
@@ -151,7 +142,7 @@ function Login() {
                   </li>
                 </ul>
               </div>
-            ) : (
+            ) : ( */}
               <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
                 <div>
                   <label htmlFor="email" className="block text-gray-700 font-semibold mb-2">
@@ -214,7 +205,7 @@ function Login() {
                   )}
                 </button>
               </form>
-            )}
+            {/* )} */}
             <p className="text-center text-gray-600 mt-6">
               Don&apos;t have an account?{" "}
               <Link to="/student/signup" className="text-blue-600 hover:underline font-semibold">

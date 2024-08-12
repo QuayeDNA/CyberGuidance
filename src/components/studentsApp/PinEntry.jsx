@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
 
 const PinEntry = ({ onCorrectPin }) => {
   const [error, setError] = useState('');
+  const [storedPin, setStoredPin] = useState('');
   const { register, handleSubmit, setValue, watch } = useForm({
     mode: 'onChange',
     defaultValues: { pin: '' },
@@ -12,9 +13,17 @@ const PinEntry = ({ onCorrectPin }) => {
 
   const pin = watch('pin');
 
+  useEffect(() => {
+    const userPin = localStorage.getItem('userPin');
+    if (userPin) {
+      setStoredPin(userPin);
+    } else {
+      setError('No PIN set. Please set a PIN in Security Settings.');
+    }
+  }, []);
+
   const onSubmit = (data) => {
-    const correctPin = '1234'; // This should be stored securely in a real application
-    if (data.pin === correctPin) {
+    if (data.pin === storedPin) {
       onCorrectPin();
     } else {
       setError('Incorrect PIN. Please try again.');
@@ -77,6 +86,7 @@ const PinEntry = ({ onCorrectPin }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="w-full bg-indigo-600 text-white rounded-full py-3 px-4 font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+            disabled={!storedPin}
           >
             Confirm
           </motion.button>

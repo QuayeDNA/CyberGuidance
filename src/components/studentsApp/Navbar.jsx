@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaBell, FaSignOutAlt, FaBars, FaUserCircle, FaUserAlt, FaHome, FaComment, FaRegNewspaper } from 'react-icons/fa';
+import { FaBell, FaSignOutAlt, FaBars, FaUserAlt, FaHome, FaComment, FaRegNewspaper, FaCog } from 'react-icons/fa';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -13,9 +13,9 @@ function Navbar() {
 
     const navLinks = [
         { id: 1, to: '/student/dashboard', icon: <FaHome className="mr-2" />, text: 'Dashboard' },
-        { id: 2, to: '/student/counselors', icon: <FaUserAlt className="mr-2" />, text: 'Find a Counsellor' },
-        { id: 3, to: '/student/message', icon: <FaComment className="mr-2" />, text: 'Messages' },
-        { id: 4, to: '/student/user', icon: <FaUserCircle className='mr-2' />, text: "User" },
+        { id: 2, to: '/student/counselors', icon: <FaUserAlt className="mr-2" />, text: 'Counsellors' },
+        { id: 3, to: '/student/appointment', icon: <FaUserAlt className="mr-2" />, text: 'Book an Appointment' },
+        { id: 4, to: '/student/message', icon: <FaComment className="mr-2" />, text: 'Messages' },
         { id: 5, to: '/student/articles', icon: <FaRegNewspaper className='mr-2' />, text: "Articles"}
     ];
 
@@ -65,6 +65,9 @@ function Navbar() {
         setShowNotificationDropdown(false);
     };
 
+    const handleSettingsClick = () => {
+        navigate("/student/user");
+    };
     const handleLogout = async () => {
         try {
             // Get the token from localStorage
@@ -186,8 +189,14 @@ function Navbar() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
-                                className="absolute right-0 top-12 w-48 p-4 bg-white border rounded-lg shadow-xl z-30"
+                                className="absolute right-0 top-12 w-48 p-4 bg-white border rounded-lg shadow-xl z-30 space-y-4"
                             >
+                                <button
+                                    onClick={handleSettingsClick}
+                                    className="flex items-center text-gray-700 hover:text-blue-500 transition duration-200 w-full text-left"
+                                    >
+                                        <FaCog className="mr-2" /> Settings
+                                    </button>
                                 <button
                                     onClick={handleLogout}
                                     className="flex items-center text-gray-700 hover:text-blue-500 transition duration-200 w-full text-left"
