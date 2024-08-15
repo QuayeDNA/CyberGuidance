@@ -61,7 +61,19 @@ function VerifyEmail() {
               onClick={() => navigate('/student/login')} 
               className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
             >
-              Go to Login
+              Go to Student Login
+            </button>
+            <button 
+              onClick={() => navigate('/counselor/login')} 
+              className="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+            >
+              Go to Counselor Login
+            </button>
+            <button 
+              onClick={() => navigate('/admin/login')} 
+              className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
+            >
+              Go to Admin Login
             </button>
           </>
         )}
