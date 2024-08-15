@@ -18,24 +18,25 @@ const AdminSignup = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://cyber-guidance.onrender.com/admin-signup', {
+      const response = await axios.post('https://cyber-guidance.onrender.com/api/admin-signup', {
         username,
         email,
-        password
+        password,
       });
 
       const { message, token } = response.data;
-      
+
       // Store the token in localStorage or a secure cookie
       localStorage.setItem('adminToken', token);
-      
+
       // Show success message
       alert(message);
-      
+
       // Navigate to admin overview or login page
       navigate('/admin/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Signup failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +50,7 @@ const AdminSignup = () => {
       className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-800 to-indigo-900"
     >
       <div className="bg-white p-8 rounded-lg shadow-xl w-96 max-w-md">
-        <motion.h2 
+        <motion.h2
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -129,9 +130,7 @@ const AdminSignup = () => {
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
             disabled={isLoading}
           >
-            {isLoading ? (
-              <FaSpinner className="animate-spin mr-2" />
-            ) : null}
+            {isLoading && <FaSpinner className="animate-spin mr-2" />}
             {isLoading ? 'Signing Up...' : 'Sign Up'}
           </button>
         </form>

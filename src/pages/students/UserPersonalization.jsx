@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Background from "../../components/Background";
 import { FaSpinner } from 'react-icons/fa';
@@ -42,36 +42,6 @@ const IssueSelectionPage = () => {
         { name: 'Exams Preparation', color: 'bg-cyan-500' },
     ];
 
-    useEffect(() => {
-        const fetchAreaOfInterest = async () => {
-            try {
-                const response = await fetch('https://cyber-guidance.onrender.com/user-info', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({ email: localStorage.getItem('userEmail') }) // Assuming you store the user's email in localStorage
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch user info');
-                }
-
-                const data = await response.json();
-                if (data.user && data.user.areaOfInterest) {
-                    setSelectedIssues(data.user.areaOfInterest);
-                }
-            } catch (error) {
-                console.error('Error fetching user info:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAreaOfInterest();
-    }, []);
-
     const toggleIssue = (issue) => {
         setSelectedIssues((prev) =>
             prev.includes(issue)
@@ -90,11 +60,20 @@ const IssueSelectionPage = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ areaOfInterest: selectedIssues })
+                body: JSON.stringify({
+                    email: localStorage.getItem('userEmail'), // Assuming you store the user's email in localStorage
+                    areaOfInterest: selectedIssues.join(', ') // Convert array to comma-separated string
+                })
             });
 
             if (!response.ok) {
-                throw new Error('Failed to update area of interest');
+                if (response.status === 400) {
+                    throw new Error('Invalid area of interest');
+                } else if (response.status === 404) {
+                    throw new Error('Student not found');
+                } else {
+                    throw new Error('Failed to update area of interest');
+                }
             }
 
             const data = await response.json();
@@ -103,7 +82,8 @@ const IssueSelectionPage = () => {
         } catch (error) {
             console.error('Error updating area of interest:', error);
             setIsSubmitting(false);
-            setErrorMessage('Failed to update area of interest. Please try again.');
+            setErrorMessage(error.message);
+            setIsLoading(false);
         }
     };
 

@@ -70,7 +70,7 @@ function Signup() {
       localStorage.setItem("userToken", response.data.token);
 
       setTimeout(() => {
-        navigate("/student/login");
+        navigate("/login");
       }, 3000);
     } catch (error) {
       console.error("Signup error:", error);

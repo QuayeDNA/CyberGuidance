@@ -1,29 +1,45 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaSearch, FaEdit, FaTrash, FaUserPlus } from 'react-icons/fa';
+import axios from 'axios';
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [users, setUsers] = useState([
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Student' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Counselor' },
-  ]);
+  const [users, setUsers] = useState([]);
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', role: 'Counselor', password: '' });
   const [editingUser, setEditingUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddUser = (e) => {
+  const handleAddUser = async (e) => {
     e.preventDefault();
-    const id = users.length + 1;
-    setUsers([...users, { ...newUser, id }]);
-    setNewUser({ name: '', email: '', role: 'Counselor', password: '' });
-    setIsAddingUser(false);
-    // Here you would typically make an API call to create the user in your backend
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    
+    try {
+      const response = await axios.post('/api/counselor-signup', {
+        username: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+      });
+      
+      setUsers([...users, { id: response.data.id, name: newUser.name, email: newUser.email, role: 'Counselor' }]);
+      setNewUser({ name: '', email: '', role: 'Counselor', password: '' });
+      setIsAddingUser(false);
+      setMessage(response.data.message || 'Counselor created successfully.');
+    } catch (error) {
+      setError(error.response?.data?.message || 'Failed to create counselor.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditUser = (user) => {
@@ -31,15 +47,14 @@ const UserManagement = () => {
     setNewUser({ ...user, password: '' });
   };
 
-  const handleUpdateUser = (e) => {
+  const handleUpdateUser = async (e) => {
     e.preventDefault();
-    setUsers(users.map(u => u.id === editingUser.id ? { ...newUser, id: u.id } : u));
+    // Implement similar API call for updating user details if needed
     setEditingUser(null);
     setNewUser({ name: '', email: '', role: 'Counselor', password: '' });
-    // Here you would typically make an API call to update the user in your backend
   };
 
-  const handleDeleteUser = (id) => {
+  const handleDeleteUser = async (id) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       setUsers(users.filter(u => u.id !== id));
       // Here you would typically make an API call to delete the user from your backend
@@ -51,9 +66,13 @@ const UserManagement = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="p-6"
+      className="p-6 bg-gray-100 min-h-screen"
     >
-      <h2 className="text-2xl font-bold mb-6">User Management</h2>
+      <h2 className="text-3xl font-bold mb-6 text-center">User Management</h2>
+      
+      {message && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">{message}</div>}
+      {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+
       <div className="mb-4 flex justify-between items-center">
         <div className="relative w-64">
           <input
@@ -67,9 +86,9 @@ const UserManagement = () => {
         </div>
         <button
           onClick={() => setIsAddingUser(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-300"
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition duration-300 flex items-center"
         >
-          <FaUserPlus className="inline-block mr-2" />
+          <FaUserPlus className="mr-2" />
           Add Counselor
         </button>
       </div>
@@ -133,6 +152,7 @@ const UserManagement = () => {
               <button
                 type="submit"
                 className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                disabled={loading}
               >
                 {editingUser ? 'Update' : 'Add'}
               </button>

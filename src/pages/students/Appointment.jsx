@@ -19,22 +19,30 @@ const AppointmentManager = () => {
         fetchAppointmentHistory();
     }, []);
 
-    const onBookAppointment = async (data) => {
+   const onBookAppointment = async (data) => {
         setLoading(true);
         setError('');
         setSuccessMessage('');
         try {
-            const response = await axios.post('https://cyber-guidance.onrender.com/api/book-appointment', data);
-            setSuccessMessage(response.data.message);
-            reset();
-            fetchAppointmentHistory();
-            setShowInstructions(true);
+            const token = 'your-auth-token'; // Replace with actual token
+            const response = await axios.post('https://cyber-guidance.onrender.com/api/book-appointment', data, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.status === 201) {
+                setSuccessMessage(response.data.message);
+                reset();
+                fetchAppointmentHistory();
+                setShowInstructions(true);
+            }
         } catch (error) {
             setError(error.response?.data?.message || 'An error occurred while booking the appointment.');
         } finally {
             setLoading(false);
         }
     };
+
 
     const fetchAppointmentHistory = async () => {
         setLoading(true);

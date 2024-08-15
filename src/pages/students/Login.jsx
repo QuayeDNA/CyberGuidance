@@ -20,7 +20,8 @@ function Login() {
   const [showCard, setShowCard] = useState(false);
   const [error, setError] = useState("");
   const { setUserData } = useAuth();
-  // const [isUnverified, setIsUnverified] = useState(false);
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
 
   const {
     control,
@@ -71,7 +72,12 @@ function Login() {
     } catch (error) {
       console.error("Login error:", error);
       if (error.response) {
-        setError(error.response.data.message || "An error occurred during login.");
+        if (error.response.data.message === "Account not verified. Check your email for verification instructions") {
+          setIsUnverified(true);
+          setUnverifiedEmail(data.email);
+        } else {
+          setError(error.response.data.message || "An error occurred during login.");
+        }
       } else if (error.request) {
         setError("No response received from the server. Please try again.");
       } else {
@@ -81,19 +87,20 @@ function Login() {
       setIsLoading(false);
     }
   };
-  // const handleResendVerification = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     await axios.post("https://cyber-guidance.onrender.com/api/resend-verification", {
-  //       email: unverifiedEmail,
-  //     });
-  //     setError("Verification email resent. Please check your inbox.");
-  //   } catch (error) {
-  //     setError("Failed to resend verification email. Please try again.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    try {
+      await axios.post("https://cyber-guidance.onrender.com/api/resend-verification-email", {
+        email: unverifiedEmail,
+      });
+      setError("Verification email resent. Please check your inbox.");
+    } catch (error) {
+      setError("Failed to resend verification email. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoggedIn()) {
     navigate("/student/dashboard");
@@ -124,7 +131,7 @@ function Login() {
                 <span className="block sm:inline">{error}</span>
               </div>
             )}
-            {/* {isUnverified ? (
+            {isUnverified ? (
               <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4" role="alert">
                 <p className="font-bold">Account not verified</p>
                 <p>Please check your email for the verification link. If you can&apos;t find it, you can:</p>
@@ -142,7 +149,7 @@ function Login() {
                   </li>
                 </ul>
               </div>
-            ) : ( */}
+            ) : (
               <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
                 <div>
                   <label htmlFor="email" className="block text-gray-700 font-semibold mb-2">
@@ -205,7 +212,7 @@ function Login() {
                   )}
                 </button>
               </form>
-            {/* )} */}
+            )}
             <p className="text-center text-gray-600 mt-6">
               Don&apos;t have an account?{" "}
               <Link to="/student/signup" className="text-blue-600 hover:underline font-semibold">
