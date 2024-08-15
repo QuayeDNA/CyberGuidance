@@ -258,7 +258,7 @@ function Navbar() {
                 </button>
                 <button
                   onClick={openModal}
-                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                 className="flex items-center text-gray-700 hover:text-blue-500 transition duration-200 w-full text-left">
                   <FaSignOutAlt className="mr-2" /> Logout
                 </button>
               </motion.div>

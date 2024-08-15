@@ -83,7 +83,6 @@ const IssueSelectionPage = () => {
             console.error('Error updating area of interest:', error);
             setIsSubmitting(false);
             setErrorMessage(error.message);
-            setIsLoading(false);
         }
     };
 
