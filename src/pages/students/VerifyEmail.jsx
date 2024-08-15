@@ -65,6 +65,7 @@ function VerifyEmail() {
             <p className="text-gray-600 mt-2">
               Please proceed to the appropriate login page.
             </p>
+            <div className="grid grid-cols-3 gap-4">
             <button
               onClick={() => navigate("/student/login")}
               className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
@@ -80,6 +81,7 @@ function VerifyEmail() {
               className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors">
               Go to Admin Login
             </button>
+            </div>
           </>
         ) : (
           <>
