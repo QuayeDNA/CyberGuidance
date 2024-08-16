@@ -78,6 +78,8 @@ function Login() {
       });
       
       setUserData(response.data);
+      console.log("Login successful:", response.data);
+      localStorage.setItem("userToken", response.data.token);
   
       if (response.data.isStudent) {
         if (response.data.isFirstLogin) {
