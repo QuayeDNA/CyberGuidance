@@ -17,19 +17,28 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://cyber-guidance.onrender.com/login', {
+      const response = await axios.post('https://cyber-guidance.onrender.com/api/login', {
         email,
         password
       });
 
-      const { isAdmin, token } = response.data;
-
+      const { isAdmin, isCounselor, isStudent, isFirstLogin, token } = response.data;
+      console.log(response.data);
       if (isAdmin) {
-        // Store the token in localStorage or a secure cookie
         localStorage.setItem('adminToken', token);
-        navigate('/admin/overview');
+        navigate('/admin/dashboard');
+      } else if (isCounselor) {
+        localStorage.setItem('counselorToken', token);
+        navigate('/counselor/dashboard');
+      } else if (isStudent) {
+        localStorage.setItem('studentToken', token);
+        if (isFirstLogin) {
+          navigate('/student/dashboard');
+        } else {
+          navigate('/login');
+        }
       } else {
-        throw new Error('Not authorized as admin');
+        throw new Error('Not authorized');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');

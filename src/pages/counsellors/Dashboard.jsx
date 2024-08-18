@@ -1,10 +1,10 @@
 import Card from "../../components/ui/cards/Card";
 import SessionView from "../../components/counselorsApp/SessionCardView";
 import ClientNotes from "../../components/counselorsApp/ClientNotes";
-import Resources from "../../components/counselorsApp/Resources";
 import ArticlesCarousel from "../../components/counselorsApp/ArticleCarousel";
 import SessionCalendar from "../../components/counselorsApp/SessionCalendar";
 import articlesData from '../../components/data/articlesData';
+import Materials from './../../components/counselorsApp/Materials';
 
 const CounselorDashboard = () => {
     return (
@@ -15,7 +15,7 @@ const CounselorDashboard = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Card 1 */}
-                <Card title="Upcoming Sessions" showAllLink={{ link: '/sessions', text: 'Manage Sessions' }}>
+                <Card title="Upcoming Sessions" showAllLink={{ link: '/counselor/sessions', text: 'Manage Sessions' }}>
                     <SessionView />
                 </Card>
                 {/* Conditionally render Calendar on medium screens */}
@@ -41,8 +41,8 @@ const CounselorDashboard = () => {
                     </Card>
                 </div>
                 {/* Card 1 */}
-                <Card title="Counseling Resources" showAllLink={{ link: '/resources', text: 'View All' }}>
-                    <Resources />
+                <Card title="Counseling Resources" showAllLink={{ link: '/counselor/material-upload', text: 'View All' }}>
+                    <Materials />
                 </Card>
                 {/* Card 2 */}
                 <ArticlesCarousel articles={articlesData} />

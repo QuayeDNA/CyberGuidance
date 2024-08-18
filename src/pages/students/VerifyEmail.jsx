@@ -59,7 +59,7 @@ function VerifyEmail() {
             <p className="text-gray-600 mt-2">Please proceed to the appropriate login page.</p>
             <div className="grid grid-cols-1 gap-4 mt-4 w-full">
               <button
-                onClick={() => navigate("/student/login")}
+                onClick={() => navigate("/login")}
                 className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors w-full">
                 Go to Student Login
               </button>
@@ -82,12 +82,12 @@ function VerifyEmail() {
             <p className="text-gray-600">{error}</p>
             <div className="grid grid-cols-1 gap-4 mt-4 w-full">
               <button
-                onClick={() => navigate("/student/login")}
+                onClick={() => navigate("/login")}
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors w-full">
                 Go to Student Login
               </button>
               <button
-                onClick={() => navigate("/counselor/login")}
+                onClick={() => navigate("/login")}
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors w-full">
                 Go to Counselor Login
               </button>

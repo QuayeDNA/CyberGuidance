@@ -1,22 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Menu } from '@headlessui/react';
-import {FaChevronDown} from 'react-icons/fa';
+import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react';
+import { FaChevronDown, FaSpinner } from 'react-icons/fa';
+import { useAuth } from '../../contexts/AuthContext';
 
 const RecommendedCounselors = () => {
   const [counselors, setCounselors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { userData } = useAuth();
 
   useEffect(() => {
     const fetchRecommendedCounselors = async () => {
+      if (!userData) {
+        setError('User not authenticated');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const response = await axios.post('/recommend-counselors', {
-          email: 'student@example.com', // Replace with actual student email
-        });
+        const response = await axios.get(
+          'https://cyber-guidance.onrender.com/api/recommend-counselors',
+          { email: userData.email },
+          {
+            headers: {
+              Authorization: `Bearer ${userData.token}`,
+            },
+          }
+        );
         setCounselors(response.data.counselors);
         setLoading(false);
       } catch (error) {
@@ -26,7 +40,7 @@ const RecommendedCounselors = () => {
     };
 
     fetchRecommendedCounselors();
-  }, []);
+  }, [userData]);
 
   const handleCounselorSelect = (username) => {
     navigate(`/student/counselor/${username}`);
@@ -35,10 +49,7 @@ const RecommendedCounselors = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+        <FaSpinner className="animate-spin h-8 w-8 text-blue-500" />
         <p className="ml-2">Loading recommended counselors...</p>
       </div>
     );
@@ -72,17 +83,17 @@ const RecommendedCounselors = () => {
                 <p className="text-gray-600 mb-4">Specialties: {counselor.specialties.join(', ')}</p>
                 <Menu as="div" className="relative inline-block text-left">
                   <div>
-                    <Menu.Button className="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75">
+                    <MenuButton className="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75">
                       Options
                       <FaChevronDown
                         className="w-5 h-5 ml-2 -mr-1 text-violet-200 hover:text-violet-100"
                         aria-hidden="true"
                       />
-                    </Menu.Button>
+                    </MenuButton>
                   </div>
-                  <Menu.Items className="absolute right-0 w-56 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <MenuItems className="absolute right-0 w-56 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <div className="px-1 py-1">
-                      <Menu.Item>
+                      <MenuItem>
                         {({ active }) => (
                           <button
                             className={`${
@@ -93,8 +104,8 @@ const RecommendedCounselors = () => {
                             View Profile
                           </button>
                         )}
-                      </Menu.Item>
-                      <Menu.Item>
+                      </MenuItem>
+                      <MenuItem>
                         {({ active }) => (
                           <button
                             className={`${
@@ -104,9 +115,9 @@ const RecommendedCounselors = () => {
                             Schedule Session
                           </button>
                         )}
-                      </Menu.Item>
+                      </MenuItem>
                     </div>
-                  </Menu.Items>
+                  </MenuItems>
                 </Menu>
               </div>
             </div>

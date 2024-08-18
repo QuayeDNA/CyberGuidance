@@ -1,29 +1,19 @@
 import { useState, useEffect } from "react";
-import {
-  FaBell,
-  FaSignOutAlt,
-  FaBars,
-  FaUserAlt,
-  FaHome,
-  FaComment,
-  FaRegNewspaper,
-  FaCog,
-} from "react-icons/fa";
-import { NavLink, useNavigate } from "react-router-dom";
+import { FaBell, FaSignOutAlt, FaBars, FaUserAlt, FaHome, FaComment, FaRegNewspaper, FaCog } from "react-icons/fa";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 import ConfirmationModal from "./ConfirmationModal";
+import { useAuth } from '../../components/contexts/AuthContext';
 
 function Navbar() {
-  const [showNotificationDropdown, setShowNotificationDropdown] =
-    useState(false);
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [showLogoutModal, setShowLogoutModal] = useState(false); 
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { logout } = useAuth();
 
   const navLinks = [
     {
@@ -113,36 +103,15 @@ function Navbar() {
   const handleSettingsClick = () => {
     navigate("/student/user");
   };
-  const handleLogout = async () => {
-    setMessage("");
-    setError("");
+  const handleLogout = () => {
+    setShowLogoutModal(true); // Show the logout confirmation modal
+};
 
-    try {
-      const response = await axios.get(
-        "https://cyber-guidance.onrender.com/api/logout"
-      );
-      if (response.status === 200) {
-        setMessage("Logged out successfully");
-        // Perform any additional logout actions here, such as redirecting to the login page
-        navigate("/login");
-      }
-    } catch (err) {
-      setError("An error occurred while logging out");
-    }
-  };
+const confirmLogout = async () => {
+    await logout();
+    navigate('/login');
+};
 
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const confirmLogout = () => {
-    handleLogout();
-    closeModal();
-  };
 
   const markAsRead = (id) => {
     setNotifications(
@@ -178,7 +147,7 @@ function Navbar() {
                 }`
               }>
               {link.icon}
-              <span>{link.text}</span>
+              <span className={`${location.pathname === link.to ? 'block' : 'hidden'}`}>{link.text}</span>
             </NavLink>
           ))}
         </nav>
@@ -257,20 +226,22 @@ function Navbar() {
                   <FaCog className="mr-2" /> Settings
                 </button>
                 <button
-                  onClick={openModal}
-                 className="flex items-center text-gray-700 hover:text-blue-500 transition duration-200 w-full text-left">
-                  <FaSignOutAlt className="mr-2" /> Logout
-                </button>
+                                    onClick={handleLogout}
+                                    className="flex items-center text-gray-700 hover:text-blue-500 transition duration-200 w-full text-left"
+                                >
+                                    <FaSignOutAlt className="mr-2" /> Logout
+                                </button>
               </motion.div>
             )}
           </AnimatePresence>
-          <ConfirmationModal
-            isOpen={isModalOpen}
-            onConfirm={confirmLogout}
-            onCancel={closeModal}
-          />
-          {message && <p className="mt-4 text-green-500">{message}</p>}
-          {error && <p className="mt-4 text-red-500">{error}</p>}
+          {showLogoutModal && (
+                <ConfirmationModal
+                    title="Confirm Logout"
+                    message="Are you sure you want to log out?"
+                    onConfirm={confirmLogout}
+                    onCancel={() => setShowLogoutModal(false)}
+                />
+            )}
         </div>
       </div>
     </header>

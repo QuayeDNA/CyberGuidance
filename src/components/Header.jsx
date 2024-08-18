@@ -43,7 +43,7 @@ const Header = () => {
   };
 
   const handleLoginClick = () => {
-    navigate('/student/login');
+    navigate('/login');
   };
 
   return (

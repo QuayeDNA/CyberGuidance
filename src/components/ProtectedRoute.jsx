@@ -38,8 +38,4 @@ ProtectedRoute.propTypes = {
   roles: PropTypes.arrayOf(PropTypes.oneOf(['student', 'counselor', 'admin'])),
 };
 
-ProtectedRoute.defaultProps = {
-  roles: [],
-};
-
 export default ProtectedRoute;

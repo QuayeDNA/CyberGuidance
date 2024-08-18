@@ -10,9 +10,9 @@ const Landing = lazy(() => import('./pages/Landing'));
 const ComingSoon = lazy(() => import('./components/ComingSoon'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Unauthorized = lazy(() => import('./components/Unauthorized'));
-
+const Login = lazy(() => import('./pages/Login'));
 // Student routes
-const StudentLogin = lazy(() => import('./pages/students/Login'));
+
 const StudentSignup = lazy(() => import('./pages/students/Signup'));
 const StudentMain = lazy(() => import('./pages/students/Main'));
 const StudentSetup = lazy(() => import('./pages/students/SetupPage'));
@@ -20,13 +20,12 @@ const StudentPersonalization = lazy(() => import('./pages/students/UserPersonali
 const VerifyEmail = lazy(() => import('./pages/students/VerifyEmail'));
 
 // Counselor routes
-const CounselorLogin = lazy(() => import('./pages/counsellors/Login'));
-const CounselorSignup = lazy(() => import('./pages/counsellors/Signup'));
 const CounselorMain = lazy(() => import('./pages/counsellors/Main'));
+const CounselorProfile = lazy(() => import('./pages/counsellors/UserPersonalization'));
 
 // Admin routes
-const AdminLogin = lazy(() => import('./pages/admin/Login'));
 const AdminSignup = lazy(() => import('./pages/admin/Signup')); 
+const AdminLogin = lazy(() => import('./pages/admin/Login'))
 const AdminLayout = lazy(() => import('./pages/admin/Main'));
 const Overview = lazy(() => import('./pages/admin/Overview'));
 const SystemSettings = lazy(() => import('./pages/admin/SystemSettings'));
@@ -34,7 +33,6 @@ const Users = lazy(() => import('./pages/admin/UserManagement'));
 const AnalyticsReports = lazy(() => import('./pages/admin/AnalyticsReports'));
 const Notifications = lazy(() => import('./pages/admin/NotificationsCenter'));
 const Appointments = lazy(() => import('./pages/admin/AppointmentManagement'));
-
 
 
 function App() {
@@ -49,11 +47,9 @@ function App() {
                                 <Route path="/" element={<Landing />} />
                                 <Route path="/coming-soon" element={<ComingSoon />} />
                                 <Route path="/verify-email" element={<VerifyEmail />} />
-                                <Route path="/login" element={<StudentLogin />} />
-                                <Route path="/student/signup" element={<StudentSignup />} />
-                                <Route path="/counselor/login" element={<CounselorLogin />} />
-                                <Route path="/counselor/signup" element={<CounselorSignup />} />
+                                <Route path="/login" element={<Login />} />
                                 <Route path="/admin/login" element={<AdminLogin />} />
+                                <Route path="/student/signup" element={<StudentSignup />} />
                                 <Route path="/admin/signup" element={<AdminSignup />} />
 
                                 {/* Protected Student routes */}
@@ -63,7 +59,10 @@ function App() {
                                 <Route path="/student/*" element={<ProtectedRoute roles={['student']}><StudentMain /></ProtectedRoute>} />
 
                                 {/* Protected Counselor routes */}
-                                <Route path="/counselor" element={<ProtectedRoute roles={['counselor']}><Navigate to="/counselor/dashboard" replace /></ProtectedRoute>} />
+                                <Route path="/counselor" element={<ProtectedRoute roles={['counselor']}>
+
+                                    <Navigate to="/counselor/dashboard" replace /></ProtectedRoute>} />
+                                <Route path="/counselor/user-personalization" element={<ProtectedRoute roles={['counselor']}><CounselorProfile /></ProtectedRoute>} />
                                 <Route path="/counselor/*" element={<ProtectedRoute roles={['counselor']}><CounselorMain /></ProtectedRoute>} />
 
                                 {/* Protected Admin routes */}

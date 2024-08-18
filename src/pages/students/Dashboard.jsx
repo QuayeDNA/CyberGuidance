@@ -1,4 +1,3 @@
-
 import Card from "../../components/ui/cards/Card";
 import SessionView from "../../components/studentsApp/SessionCardView";
 import Notes from "../../components/studentsApp/Notes";
@@ -6,12 +5,17 @@ import Materials from "../../components/studentsApp/Materials";
 import ArticlesCarousel from "../../components/studentsApp/ArticleCarousel";
 import SessionCalendar from "../../components/studentsApp/SessionCalendar";
 import RecommendedCounselors from "../../components/ui/cards/RecommendedCounselors";
-import articlesData from '../../components/data/articlesData'
+import articlesData from '../../components/data/articlesData';
+import { useAuth } from '../../components/contexts/AuthContext'; // Import useAuth hook
+
 const Dashboard = () => {
+    const { userData } = useAuth(); // Extract user data
+    const userName = userData?.name || "User"; // Get user's name or default to "User"
+
     return (
         <div className="container mx-auto px-4">
             <div className="text-left mb-4">
-                <h2 className="text-2xl font-bold">Hi, David</h2>
+                <h2 className="text-2xl font-bold">Hi, {userName}</h2>
                 <p className="text-gray-500">Welcome to your safe space.</p>
             </div>
             <RecommendedCounselors />

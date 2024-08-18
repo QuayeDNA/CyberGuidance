@@ -16,16 +16,26 @@ const Counselors = () => {
 
     const fetchCounselors = async () => {
         try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No token found');
+            }
+
             const response = await axios.get('https://cyber-guidance.onrender.com/api/all-counselors', {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
                 }
             });
-            setCounselors(response.data.counselors);
-            setLoading(false);
+
+            if (response.status === 200) {
+                setCounselors(response.data.counselors);
+            } else {
+                throw new Error(`Unexpected response status: ${response.status}`);
+            }
         } catch (error) {
             console.error('Error fetching counselors:', error);
             toast.error('Failed to fetch counselors. Please try again.');
+        } finally {
             setLoading(false);
         }
     };

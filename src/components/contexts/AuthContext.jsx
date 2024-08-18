@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -15,15 +16,20 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const setUserData = (data) => {
+  const setUserData = useCallback((data) => {
     localStorage.setItem('userData', JSON.stringify(data));
     setUserDataState(data);
-  };
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem('userData');
-    setUserDataState(null);
-  };
+  const logout = useCallback(async () => {
+    try {
+      await axios.get('https://cyber-guidance.onrender.com/api/logout');
+      localStorage.removeItem('userData');
+      setUserDataState(null);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  }, []);
 
   const value = useMemo(() => ({
     userData,

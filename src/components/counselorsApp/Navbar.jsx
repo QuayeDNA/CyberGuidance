@@ -2,19 +2,23 @@ import { useState, useEffect } from 'react';
 import { FaBell, FaSignOutAlt, FaBars, FaUserCircle, FaCalendarAlt, FaHome, FaComments, FaClipboardList } from 'react-icons/fa';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../components/contexts/AuthContext'; // Import useAuth hook
+import ConfirmationModal from './ConfirmationModal'; // Import ConfirmationModal component
 
 function Navbar() {
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [showMenuDropdown, setShowMenuDropdown] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false); // State for logout modal
     const [notifications, setNotifications] = useState([]);
+    const { logout } = useAuth(); // Get logout function from AuthContext
 
     const navigate = useNavigate();
 
     const navLinks = [
         { id: 1, to: '/counselor/dashboard', icon: <FaHome className="mr-2" />, text: 'Dashboard' },
         { id: 2, to: '/counselor/sessions', icon: <FaCalendarAlt className="mr-2" />, text: 'Sessions' },
-        { id: 3, to: '/counselor/messages', icon: <FaComments className="mr-2" />, text: 'Messages' },
-        { id: 4, to: '/counselor/profile', icon: <FaUserCircle className='mr-2' />, text: "Profile" },
+        { id: 3, to: '/counselor/message', icon: <FaComments className="mr-2" />, text: 'Messages' },
+        { id: 4, to: '/counselor/user', icon: <FaUserCircle className='mr-2' />, text: "Profile" },
         { id: 5, to: '/counselor/notes', icon: <FaClipboardList className='mr-2' />, text: "Notes" }
     ];
 
@@ -54,6 +58,15 @@ function Navbar() {
         fetchNotifications();
     }, []);
 
+    
+  const markAsRead = (id) => {
+    setNotifications(
+      notifications.map((notif) =>
+        notif.id === id ? { ...notif, isRead: true } : notif
+      )
+    );
+  };
+
     const toggleNotificationDropdown = () => {
         setShowNotificationDropdown(!showNotificationDropdown);
         setShowMenuDropdown(false);
@@ -65,16 +78,12 @@ function Navbar() {
     };
 
     const handleLogout = () => {
-        // Implement logout logic here
-        // For example:
-        localStorage.removeItem('counselorToken');
-        navigate('/counselor/login');
+        setShowLogoutModal(true); // Show the logout confirmation modal
     };
 
-    const markAsRead = (id) => {
-        setNotifications(notifications.map(notif =>
-            notif.id === id ? { ...notif, isRead: true } : notif
-        ));
+    const confirmLogout = async () => {
+        await logout();
+        navigate('/login');
     };
 
     return (
@@ -176,6 +185,14 @@ function Navbar() {
                     </AnimatePresence>
                 </div>
             </div>
+            {showLogoutModal && (
+                <ConfirmationModal
+                    title="Confirm Logout"
+                    message="Are you sure you want to log out?"
+                    onConfirm={confirmLogout}
+                    onCancel={() => setShowLogoutModal(false)}
+                />
+            )}
         </header>
     );
 }

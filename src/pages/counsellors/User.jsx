@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import ProfileSection from '../../components/studentsApp/ProfileSection';
-import PersonalInfoSection from '../../components/studentsApp/PersonalInfoSection';
-import UserInfoForm from '../../components/studentsApp/UserInfoForm';
-import SecuritySettings from '../../components/studentsApp/SecuritySettings';
-import PersonalizationSettings from '../../components/studentsApp/PersonalizationSettings';
+import SecuritySettings from '../../components/counselorsApp/SecuritySettings';
+import PersonalizationSettings from '../../components/counselorsApp/PersonalizationSettings';
 
 function User() {
     const [activeTab, setActiveTab] = useState('user');
@@ -19,7 +17,6 @@ function User() {
                 {/* Left Column: User Profile and Personal Information */}
                 <div className="col-span-1">
                     <ProfileSection />
-                    <PersonalInfoSection />
                 </div>
 
                 {/* Right Column: Edit Form with Tabs */}
@@ -27,13 +24,11 @@ function User() {
                     <section className="bg-white rounded-lg shadow-md p-6 mb-8">
                         {/* Tab Buttons */}
                         <div className="flex flex-wrap mb-6">
-                            <TabButton label="User Information" tabName="user" activeTab={activeTab} onClick={handleTabClick} />
                             <TabButton label="Security" tabName="security" activeTab={activeTab} onClick={handleTabClick} />
                             <TabButton label="Personalization" tabName="personalization" activeTab={activeTab} onClick={handleTabClick} />
                         </div>
 
                         {/* Tab Content */}
-                        {activeTab === 'user' && <UserInfoForm />}
                         {activeTab === 'security' && <SecuritySettings />}
                         {activeTab === 'personalization' && <PersonalizationSettings />}
                     </section>

@@ -10,7 +10,7 @@ function BookSessionButton({ className }) {
     if (isAuthenticated) {
       navigate('/student/dashboard');
     } else {
-      navigate('/student/login');
+      navigate('/login');
     }
   };
 

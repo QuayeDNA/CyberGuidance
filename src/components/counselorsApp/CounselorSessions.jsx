@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { FaCalendar, FaClock, FaMapMarkerAlt, FaVideo, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
-
+import { FaCalendar, FaClock, FaMapMarkerAlt, FaVideo, FaSearch, FaFilter, FaArrowLeft, FaPrint } from 'react-icons/fa';
+import { Tab, TabList, TabPanel, TabGroup, TabPanels } from '@headlessui/react';
+import PropTypes from 'prop-types';
+import PrintableSessionLog from './PrintableSessionLog';
+import ReactToPrint from 'react-to-print';
 
 const CounselorSessions = () => {
   const [clients, setClients] = useState([]);
@@ -13,6 +16,7 @@ const CounselorSessions = () => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [sessionNotes, setSessionNotes] = useState('');
   const clientsPerPage = 10;
+  const printableRef = useRef();
 
   useEffect(() => {
     fetchClients();
@@ -103,6 +107,126 @@ const CounselorSessions = () => {
     setSelectedSession(updatedSession);
   };
 
+  const renderClientSessions = (client) => (
+    <TabGroup>
+      <TabList className="flex p-1 space-x-1 bg-blue-900/20 rounded-xl mb-4">
+        <Tab
+          className={({ selected }) =>
+            `w-full py-2.5 text-sm font-medium leading-5 text-blue-700 rounded-lg
+            ${selected ? 'bg-white shadow' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
+          }
+        >
+          Upcoming Sessions
+        </Tab>
+        <Tab
+          className={({ selected }) =>
+            `w-full py-2.5 text-sm font-medium leading-5 text-blue-700 rounded-lg
+            ${selected ? 'bg-white shadow' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
+          }
+        >
+          Session Log
+        </Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel>
+          {client.sessions.filter(session => session.status === 'upcoming').map(session => (
+            <SessionCard 
+              key={session.id} 
+              session={session} 
+              onViewDetails={() => handleViewSessionDetails(session)}
+            />
+          ))}
+        </TabPanel>
+        <TabPanel>
+        <div className="flex justify-end mb-4">
+            <ReactToPrint
+              trigger={() => (
+                <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out flex items-center">
+                  <FaPrint className="mr-2" />
+                  Print Session Log
+                </button>
+              )}
+              content={() => printableRef.current}
+            />
+          </div>
+          <SessionLogTable sessions={client.sessions.filter(session => session.status === 'completed')} />
+          <div style={{ display: 'none' }}>
+            <PrintableSessionLog 
+              ref={printableRef} 
+              client={client} 
+              sessions={client.sessions.filter(session => session.status === 'completed')} 
+            />
+          </div>
+        </TabPanel>
+      </TabPanels>
+    </TabGroup>
+  );
+
+  const SessionCard = ({ session, onViewDetails }) => (
+    <div className="border-l-4 border-blue-500 bg-white rounded-lg shadow p-4 mb-4">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-lg font-semibold">{format(session.date, 'MMMM d, yyyy')}</span>
+        <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+          {session.status}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 mb-2">
+        <div className="flex items-center">
+          <FaClock className="text-gray-500 mr-2" />
+          <span>{format(session.date, 'h:mm a')}</span>
+        </div>
+        <div className="flex items-center">
+          <FaMapMarkerAlt className="text-gray-500 mr-2" />
+          <span>{session.location}</span>
+        </div>
+        <div className="flex items-center">
+          <FaVideo className="text-gray-500 mr-2" />
+          <span>{session.method}</span>
+        </div>
+      </div>
+      <button
+        onClick={onViewDetails}
+        className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md transition duration-300 ease-in-out text-sm"
+      >
+        View Details
+      </button>
+    </div>
+  );
+
+  const SessionLogTable = ({ sessions }) => (
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {sessions.map((session) => (
+          <tr key={session.id}>
+            <td className="px-6 py-4 whitespace-nowrap">{format(session.date, 'MMMM d, yyyy')}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{format(session.date, 'h:mm a')}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{session.location}</td>
+            <td className="px-6 py-4 whitespace-nowrap">{session.method}</td>
+            <td className="px-6 py-4">{session.notes}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
+  SessionLogTable.propTypes = {
+    sessions: PropTypes.array.isRequired
+  }
+
+  SessionCard.propTypes = {
+    session: PropTypes.object.isRequired,     
+    onViewDetails: PropTypes.func.isRequired
+  }
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">My Clients</h1>
@@ -140,28 +264,28 @@ const CounselorSessions = () => {
             </div>
           ) : (
             <AnimatePresence>
-              {currentClients.map(client => (
-                <motion.div
-                  key={client.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-white rounded-lg shadow-md p-6 mb-4"
+            {currentClients.map(client => (
+              <motion.div
+                key={client.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-lg shadow-md p-6 mb-4"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-gray-800">{client.name}</h2>
+                  <span className="text-sm text-gray-600">{client.sessions.length} sessions</span>
+                </div>
+                <button
+                  onClick={() => handleViewClientSessions(client)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out"
                 >
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-gray-800">{client.name}</h2>
-                    <span className="text-sm text-gray-600">{client.sessions.length} sessions</span>
-                  </div>
-                  <button
-                    onClick={() => handleViewClientSessions(client)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out"
-                  >
-                    View Sessions
-                  </button>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                  View Sessions
+                </button>
+              </motion.div>
+            ))}
+          </AnimatePresence>
           )}
 
           <div className="flex justify-center mt-6">
@@ -182,7 +306,7 @@ const CounselorSessions = () => {
         </>
       )}
 
-      {selectedClient && !selectedSession && (
+{selectedClient && !selectedSession && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center mb-6">
             <button
@@ -196,49 +320,10 @@ const CounselorSessions = () => {
           {selectedClient.sessions.length === 0 ? (
             <p className="text-xl text-gray-600 text-center">No sessions found for this client.</p>
           ) : (
-            <div className="space-y-4">
-              {selectedClient.sessions.map(session => (
-                <div
-                  key={session.id}
-                  className={`border-l-4 ${
-                    session.status === 'upcoming' ? 'border-blue-500' : 'border-green-500'
-                  } bg-white rounded-lg shadow p-4`}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-lg font-semibold">{format(session.date, 'MMMM d, yyyy')}</span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      session.status === 'upcoming' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                    }`}>
-                      {session.status}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div className="flex items-center">
-                      <FaClock className="text-gray-500 mr-2" />
-                      <span>{format(session.date, 'h:mm a')}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <FaMapMarkerAlt className="text-gray-500 mr-2" />
-                      <span>{session.location}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <FaVideo className="text-gray-500 mr-2" />
-                      <span>{session.method}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleViewSessionDetails(session)}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md transition duration-300 ease-in-out text-sm"
-                  >
-                    View Details
-                  </button>
-                </div>
-              ))}
-            </div>
+            renderClientSessions(selectedClient)
           )}
         </div>
       )}
-
       <AnimatePresence>
         {selectedSession && (
           <motion.div
