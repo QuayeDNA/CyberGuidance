@@ -1,62 +1,25 @@
 import { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import Footer from "../components/Footer";
-import bgImage from "../assets/Counselling.jpg";
 import { useNavigate, Link, Navigate } from "react-router-dom";
-import { FaSpinner } from "react-icons/fa";
 import axios from "axios";
 import { useAuth } from '../components/contexts/AuthContext';
-
-const loginSchema = yup.object().shape({
-  email: yup.string().email("Invalid email format").required("Email is required"),
-  password: yup.string().required("Password is required"),
-});
-
-const forgotPasswordSchema = yup.object().shape({
-  email: yup.string().email("Invalid email format").required("Email is required"),
-});
-
-const otpSchema = yup.object().shape({
-  otp: yup.string().required("OTP is required").length(6, "OTP must be 6 digits"),
-});
-
-const resetPasswordSchema = yup.object().shape({
-  newPassword: yup.string().required("New password is required").min(8, "Password must be at least 8 characters"),
-  confirmPassword: yup.string().oneOf([yup.ref('newPassword'), null], 'Passwords must match'),
-});
+import Footer from "../components/Footer";
+import bgImage from "../assets/Counselling.jpg";
+import LoginForm from "./LoginForm";
+import { FaSpinner } from "react-icons/fa";
+import ForgotPasswordForm from "./ForgotPasswordForm";
+import OtpVerificationForm from "./OtpVerificationForm";
+import ResetPasswordForm from "./ResetPasswordForm";
 
 function Login() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [error, setError] = useState("");
-  const { userData, login} = useAuth();
+  const { userData, login } = useAuth();
   const [isUnverified, setIsUnverified] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [loginState, setLoginState] = useState("login");
   const [resetEmail, setResetEmail] = useState("");
-
-  const loginForm = useForm({
-    resolver: yupResolver(loginSchema),
-    defaultValues: { email: "", password: "" }
-  });
-
-  const forgotPasswordForm = useForm({
-    resolver: yupResolver(forgotPasswordSchema),
-    defaultValues: { email: "" }
-  });
-
-  const otpForm = useForm({
-    resolver: yupResolver(otpSchema),
-    defaultValues: { otp: "" }
-  });
-
-  const resetPasswordForm = useForm({
-    resolver: yupResolver(resetPasswordSchema),
-    defaultValues: { newPassword: "", confirmPassword: "" }
-  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -65,14 +28,6 @@ function Login() {
 
     return () => clearTimeout(timer);
   }, []);
-
-  useEffect(() => {
-    // Reset forms when switching states
-    if (loginState === "login") loginForm.reset();
-    if (loginState === "forgotPassword") forgotPasswordForm.reset();
-    if (loginState === "otpVerification") otpForm.reset();
-    if (loginState === "resetPassword") resetPasswordForm.reset();
-  }, [loginState]);
 
   if (userData) {
     const redirectPath = userData.isStudent ? '/student/dashboard' :
@@ -86,7 +41,6 @@ function Login() {
     setError("");
   
     try {
-      console.log("Attempting login...");
       const response = await axios.post("https://cyber-guidance.onrender.com/api/login", {
         email: data.email,
         password: data.password,
@@ -99,7 +53,6 @@ function Login() {
         isAdmin: response.data.isAdmin,
         isFirstLogin: response.data.isFirstLogin
       });
-      console.log("Login successful:", response.data);
       localStorage.setItem("userToken", response.data.token);
   
       if (response.data.isStudent) {
@@ -114,18 +67,11 @@ function Login() {
         navigate('/admin/dashboard');
       }
     } catch (error) {
-      console.error("Login error:", error);
-      if (error.response) {
-        if (error.response.data.message === "Account not verified. Check your email for verification instructions") {
-          setIsUnverified(true);
-          setUnverifiedEmail(data.email);
-        } else {
-          setError(error.response.data.message || "Login failed. Please try again.");
-        }
-      } else if (error.request) {
-        setError("No response from server. Please try again later.");
+      if (error.response?.data?.message === "Account not verified. Check your email for verification instructions") {
+        setIsUnverified(true);
+        setUnverifiedEmail(data.email);
       } else {
-        setError("An error occurred. Please try again.");
+        setError(error.response?.data?.message || "Login failed. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -145,6 +91,7 @@ function Login() {
       setIsLoading(false);
     }
   };
+
   const handleForgotPassword = async (data) => {
     setIsLoading(true);
     setError("");
@@ -201,237 +148,33 @@ function Login() {
     switch (loginState) {
       case "login":
         return (
-          <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
-            {/* Login form fields */}
-                <div>
-                  <label htmlFor="email" className="block text-gray-700 font-semibold mb-2">
-                    Email
-                  </label>
-                  <Controller
-                    name="email"
-                    control={loginForm.control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="email"
-                        id="email"
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          loginForm.formState.errors.email ? "border-red-500" : "border-gray-300"
-                        }`}
-                        placeholder="Enter your email"
-                      />
-                    )}
-                  />
-                  {loginForm.formState.errors.email && (
-                    <p className="text-red-500 text-sm mt-1">{loginForm.formState.errors.email.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="password" className="block text-gray-700 font-semibold mb-2">
-                    Password
-                  </label>
-                  <Controller
-                    name="password"
-                    control={loginForm.control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="password"
-                        id="password"
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          loginForm.formState.errors.password ? "border-red-500" : "border-gray-300"
-                        }`}
-                        placeholder="Enter your password"
-                      />
-                    )}
-                  />
-                  {loginForm.formState.errors.password && (
-                    <p className="text-red-500 text-sm mt-1">{loginForm.formState.errors.password.message}</p>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <FaSpinner className="animate-spin mr-2" />
-                      Logging in...
-                    </>
-                  ) : (
-                    "Log In"
-                  )}
-                </button>
-                <p className="text-center text-gray-600 mt-4">
-                  <button
-                    onClick={() => setLoginState("forgotPassword")}
-                    className="text-blue-600 hover:underline focus:outline-none"
-                  >
-                    Forgot Password?
-                  </button>
-                </p>
-             
-          </form>
+          <LoginForm 
+            onSubmit={handleLogin} 
+            isLoading={isLoading} 
+            onForgotPassword={() => setLoginState("forgotPassword")} 
+          />
         );
       case "forgotPassword":
         return (
-          <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-6">
-            {/* Forgot password form fields */}
-                <div>
-                  <label htmlFor="forgotPasswordEmail" className="block text-gray-700 font-semibold mb-2">
-                    Email
-                  </label>
-                  <Controller
-                    name="email"
-                    control={forgotPasswordForm.control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="email"
-                        id="forgotPasswordEmail"
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          forgotPasswordForm.formState.errors.email ? "border-red-500" : "border-gray-300"
-                        }`}
-                        placeholder="Enter your email"
-                      />
-                    )}
-                  />
-                  {forgotPasswordForm.formState.errors.email && (
-                    <p className="text-red-500 text-sm mt-1">{forgotPasswordForm.formState.errors.email.message}</p>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <FaSpinner className="animate-spin mr-2" />
-                      Sending...
-                    </>
-                  ) : (
-                    "Send Reset Instructions"
-                  )}
-                </button>
-                <p className="text-center text-gray-600 mt-4">
-                  <button
-                    onClick={() => setLoginState("login")}
-                    className="text-blue-600 hover:underline focus:outline-none"
-                  >
-                    Back to Login
-                  </button>
-                </p>
-          </form>
+          <ForgotPasswordForm 
+            onSubmit={handleForgotPassword} 
+            isLoading={isLoading} 
+            onBackToLogin={() => setLoginState("login")} 
+          />
         );
       case "otpVerification":
         return (
-          <form onSubmit={otpForm.handleSubmit(handleOtpVerification)} className="space-y-6">
-            {/* OTP verification form fields */}
-                <div>
-                  <label htmlFor="otp" className="block text-gray-700 font-semibold mb-2">
-                    Enter OTP
-                  </label>
-                  <Controller
-                    name="otp"
-                    control={otpForm.control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="text"
-                        id="otp"
-                        className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          otpForm.formState.errors.otp ? "border-red-500" : "border-gray-300"
-                        }`}
-                        placeholder="Enter 6-digit OTP"
-                      />
-                    )}
-                  />
-                  {otpForm.formState.errors.otp && (
-                    <p className="text-red-500 text-sm mt-1">{otpForm.formState.errors.otp.message}</p>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <FaSpinner className="animate-spin mr-2" />
-                      Verifying...
-                    </>
-                  ) : (
-                    "Verify OTP"
-                  )}
-                </button>
-          </form>
+          <OtpVerificationForm 
+            onSubmit={handleOtpVerification} 
+            isLoading={isLoading} 
+          />
         );
       case "resetPassword":
         return (
-          <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)} className="space-y-6">
-          <div>
-            <label htmlFor="newPassword" className="block text-gray-700 font-semibold mb-2">
-              New Password
-            </label>
-            <Controller
-              name="newPassword"
-              control={resetPasswordForm.control}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="password"
-                  id="newPassword"
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    resetPasswordForm.formState.errors.newPassword ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="Enter new password"
-                />
-              )}
-            />
-            {resetPasswordForm.formState.errors.newPassword && (
-              <p className="text-red-500 text-sm mt-1">{resetPasswordForm.formState.errors.newPassword.message}</p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="confirmPassword" className="block text-gray-700 font-semibold mb-2">
-              Confirm New Password
-            </label>
-            <Controller
-              name="confirmPassword"
-              control={resetPasswordForm.control}
-              render={({ field }) => (
-                <input
-                  {...field}
-                  type="password"
-                  id="confirmPassword"
-                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    resetPasswordForm.formState.errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="Confirm new password"
-                />
-              )}
-            />
-            {resetPasswordForm.formState.errors.confirmPassword && (
-              <p className="text-red-500 text-sm mt-1">{resetPasswordForm.formState.errors.confirmPassword.message}</p>
-            )}
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <FaSpinner className="animate-spin mr-2" />
-                Resetting...
-              </>
-            ) : (
-              "Reset Password"
-            )}
-          </button>
-        </form>
+          <ResetPasswordForm 
+            onSubmit={handleResetPassword} 
+            isLoading={isLoading} 
+          />
         );
       default:
         return null;
@@ -485,7 +228,7 @@ function Login() {
             )}
             {loginState === "login" && (
               <p className="text-center text-gray-600 mt-6">
-                Don&apos;t have an account?{" "}
+                Don&pos;t have an account?{" "}
                 <Link to="/student/signup" className="text-blue-600 hover:underline font-semibold">
                   Sign up
                 </Link>
