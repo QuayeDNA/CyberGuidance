@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaEnvelope, FaLock, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../components/contexts/AuthContext';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const AdminLogin = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,23 +26,15 @@ const AdminLogin = () => {
 
       const { isAdmin, isCounselor, isStudent, isFirstLogin, token } = response.data;
       console.log(response.data);
-      if (isAdmin) {
-        localStorage.setItem('adminToken', token);
-        navigate('/admin/dashboard');
-      } else if (isCounselor) {
-        localStorage.setItem('counselorToken', token);
-        navigate('/counselor/dashboard');
-      } else if (isStudent) {
-        localStorage.setItem('studentToken', token);
-        if (isFirstLogin) {
-          navigate('/student/dashboard');
-        } else {
-          navigate('/login');
-        }
+
+      if (isAdmin && isCounselor) {
+        login({ isAdmin, isCounselor, isStudent, isFirstLogin, token });
+        navigate('/admin/overview');
       } else {
-        throw new Error('Not authorized');
+        setError('Not authorized as admin and counselor');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);

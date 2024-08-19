@@ -32,7 +32,7 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [error, setError] = useState("");
-  const { userData, setUserData } = useAuth();
+  const { userData, login} = useAuth();
   const [isUnverified, setIsUnverified] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [loginState, setLoginState] = useState("login");
@@ -92,7 +92,7 @@ function Login() {
         password: data.password,
       });
       
-      setUserData({
+      login({
         token: response.data.token,
         isStudent: response.data.isStudent,
         isCounselor: response.data.isCounselor,
@@ -104,21 +104,14 @@ function Login() {
   
       if (response.data.isStudent) {
         if (response.data.isFirstLogin) {
-          navigate("/student/setup");
+          navigate('/student/first-login');
         } else {
-          navigate("/student/dashboard");
+          navigate('/student/dashboard');
         }
       } else if (response.data.isCounselor) {
-        if (response.data.isFirstLogin) {
-          navigate("/counselor/user-personalization");
-        } else {
-          navigate("/counselor/dashboard");
-        }
+        navigate('/counselor/dashboard');
       } else if (response.data.isAdmin) {
-        navigate("/admin/dashboard");
-      } else {
-        console.error("Unknown user type");
-        setError("Unknown user type. Please contact support.");
+        navigate('/admin/dashboard');
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -127,10 +120,10 @@ function Login() {
           setIsUnverified(true);
           setUnverifiedEmail(data.email);
         } else {
-          setError(error.response.data.message || "An error occurred during login.");
+          setError(error.response.data.message || "Login failed. Please try again.");
         }
       } else if (error.request) {
-        setError("No response received from the server. Please try again.");
+        setError("No response from server. Please try again later.");
       } else {
         setError("An error occurred. Please try again.");
       }

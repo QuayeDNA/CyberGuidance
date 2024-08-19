@@ -66,20 +66,19 @@ function App() {
                                 <Route path="/counselor/*" element={<ProtectedRoute roles={['counselor']}><CounselorMain /></ProtectedRoute>} />
 
                                 {/* Protected Admin routes */}
-                                <Route path="/admin" element={<ProtectedRoute roles={['admin']}><Navigate to="/admin/overview" replace /></ProtectedRoute>} />
-                                <Route path="/admin/*" element={<ProtectedRoute roles={['admin']}>
-                                    <AdminLayout>
-                                        <Routes>
-                                            <Route index element={<Navigate to="overview" />} />
-                                            <Route path="overview" element={<Overview />} />
-                                            <Route path="users" element={<Users />} />
-                                            <Route path="appointments" element={<Appointments />} />
-                                            <Route path="analytics" element={<AnalyticsReports />} />
-                                            <Route path="settings" element={<SystemSettings />} />
-                                            <Route path="notifications" element={<Notifications />} />
-                                        </Routes>
-                                    </AdminLayout>
-                                </ProtectedRoute>} />
+                                <Route path="/admin/*" element={
+  <ProtectedRoute roles={['admin']}>
+    <AdminLayout />
+  </ProtectedRoute>
+}>
+  <Route index element={<Navigate to="overview" />} />
+  <Route path="overview" element={<Overview />} />
+  <Route path="users" element={<Users />} />
+  <Route path="appointments" element={<Appointments />} />
+  <Route path="analytics" element={<AnalyticsReports />} />
+  <Route path="settings" element={<SystemSettings />} />
+  <Route path="notifications" element={<Notifications />} />
+</Route>
 
                                 {/* Catch-all route for 404 */}
                                 <Route path="*" element={<NotFound />} />

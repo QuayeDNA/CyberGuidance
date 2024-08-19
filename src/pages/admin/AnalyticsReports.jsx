@@ -216,7 +216,7 @@ const AnalyticsReports = () => {
             animate={{ y: 0 }}
             exit={{ y: '-100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed top-0 left-0 right-0 bg-white p-6 shadow-lg z-50 max-h-screen overflow-y-auto"
+            className="fixed top-0 left-12 right-0 bg-white p-6 shadow-lg z-[9999] max-h-screen overflow-y-auto"
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Generated Report: {reportPeriod}</h3>

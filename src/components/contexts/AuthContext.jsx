@@ -8,17 +8,17 @@ export const AuthProvider = ({ children }) => {
   const [userData, setUserDataState] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const login = useCallback((data) => {
+    localStorage.setItem('userData', JSON.stringify(data));
+    setUserDataState(data);
+  }, []);
+
   useEffect(() => {
     const storedUserData = localStorage.getItem('userData');
     if (storedUserData) {
       setUserDataState(JSON.parse(storedUserData));
     }
     setLoading(false);
-  }, []);
-
-  const setUserData = useCallback((data) => {
-    localStorage.setItem('userData', JSON.stringify(data));
-    setUserDataState(data);
   }, []);
 
   const logout = useCallback(async () => {
@@ -33,10 +33,10 @@ export const AuthProvider = ({ children }) => {
 
   const value = useMemo(() => ({
     userData,
-    setUserData,
+    login, // Ensure login function is included here
     logout,
     loading,
-  }), [userData, setUserData, logout, loading]);
+  }), [userData, login, logout, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

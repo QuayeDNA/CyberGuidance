@@ -11,16 +11,62 @@ import {
   FaBars,
   FaTimes
 } from 'react-icons/fa';
+import { useAuth } from '../../components/contexts/AuthContext';
+import PropTypes from 'prop-types';
+
+// Confirmation Modal Component
+const ConfirmationModal = ({ isOpen, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded shadow-lg">
+        <h2 className="text-xl mb-4">Confirm Logout</h2>
+        <p className="mb-4">Are you sure you want to logout?</p>
+        <div className="flex justify-end">
+          <button onClick={onCancel} className="bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded mr-2">
+            Cancel
+          </button>
+          <button onClick={onConfirm} className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ConfirmationModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+};
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    // Implement your logout logic here
-    console.log('Logging out...');
-    navigate('/admin/login');
+    setIsModalOpen(true);
+  };
+
+  const confirmLogout = async () => {
+    try {
+      await logout();
+      console.log('Logging out...');
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setIsModalOpen(false);
+    }
+  };
+
+  const cancelLogout = () => {
+    setIsModalOpen(false);
   };
 
   const toggleSidebar = () => {
@@ -89,6 +135,13 @@ const AdminDashboard = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
     </div>
   );
 };
