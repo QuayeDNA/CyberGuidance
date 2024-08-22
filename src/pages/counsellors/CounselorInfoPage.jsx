@@ -1,121 +1,166 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FaSpinner, FaExclamationTriangle, FaUser, FaEnvelope, FaPhone, FaBuilding, FaInfoCircle, FaTag } from 'react-icons/fa';
-import PropTypes from 'prop-types';
+import { useState } from "react";
+import axios from "axios";
+import { FaUser, FaBuilding, FaPhone, FaInfoCircle } from "react-icons/fa";
+import Background from "../../components/Background";
+import { useNavigate } from "react-router-dom";
 
-function CounselorInfoSection() {
-  const [counselorInfo, setCounselorInfo] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+const CounselorInfoForm = () => {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    department: "",
+    mobileNumber: "",
+    bio: "",
+    profilePicture: null,
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchCounselorData = async () => {
-      try {
-        const response = await axios.get('https://cyber-guidance.onrender.com/api/user-info', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        setCounselorInfo(response.data.user);
-      } catch (err) {
-        setError(err.response?.data.message || 'An error occurred while fetching data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCounselorData();
-  }, []);
-
-  const InfoItem = ({ icon, label, value }) => (
-    <div className="flex items-start mb-4">
-      <div className="text-blue-500 mr-3 mt-1">
-        {icon}
-      </div>
-      <div>
-        <p className="font-semibold text-gray-700">{label}</p>
-        <p className="text-gray-600">{value || 'Not provided'}</p>
-      </div>
-    </div>
-  );
-
-  InfoItem.propTypes = {
-    icon: PropTypes.element.isRequired,
-    label: PropTypes.string.isRequired,
-    value: PropTypes.string,
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData(prev => ({ ...prev, [name]: files ? files[0] : value }));
   };
-  
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("Updating your profile...");
+    try {
+      const token = localStorage.getItem("token");
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach(key => formDataToSend.append(key, formData[key]));
+      
+      await axios.put("https://cyber-guidance.onrender.com/api/personal-info", formDataToSend, {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+      });
+      setMessage("Profile updated successfully! Redirecting to dashboard...");
+      setTimeout(() => navigate("/counselor/dashboard"), 2000);
+    } catch (error) {
+      setMessage("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <section className="bg-white rounded-lg shadow-md p-6 mb-8">
-      <h2 className="text-2xl font-bold mb-6 text-blue-600">Counselor Information</h2>
-      {loading ? (
-        <div className="flex items-center justify-center h-32">
-          <FaSpinner className="animate-spin text-blue-500 text-3xl" />
-        </div>
-      ) : error ? (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-          <div className="flex items-center">
-            <FaExclamationTriangle className="text-red-500 mr-2" />
-            <p className="font-bold">Error</p>
+    <Background>
+      <div className="max-w-4xl mx-auto px-4 py-8 z-[20]">
+        <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+            <h2 className="text-2xl font-bold text-white">Counselor Profile</h2>
           </div>
-          <p className="mt-2">{error}</p>
-        </div>
-      ) : counselorInfo ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <InfoItem 
-              icon={<FaUser />} 
-              label="Full Name" 
-              value={counselorInfo.personalInfo.fullName} 
-            />
-            <InfoItem 
-              icon={<FaEnvelope />} 
-              label="Email" 
-              value={counselorInfo.email} 
-            />
-            <InfoItem 
-              icon={<FaPhone />} 
-              label="Mobile Number" 
-              value={counselorInfo.personalInfo.mobileNumber} 
-            />
-            <InfoItem 
-              icon={<FaBuilding />} 
-              label="Department" 
-              value={counselorInfo.personalInfo.department} 
-            />
-          </div>
-          <div>
-            <InfoItem 
-              icon={<FaUser />} 
-              label="Username" 
-              value={counselorInfo.username} 
-            />
-            <div className="mb-4">
-              <div className="flex items-center mb-2">
-                <FaTag className="text-blue-500 mr-2" />
-                <p className="font-semibold text-gray-700">Specialties</p>
+          <div className="p-6">
+            {message && (
+              <div className="mb-4 p-4 bg-blue-100 text-blue-700 rounded-md">
+                {message}
               </div>
-              <ul className="list-disc list-inside text-gray-600 pl-5">
-                {counselorInfo.specialties.map((specialty, index) => (
-                  <li key={index}>{specialty}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          <div className="md:col-span-2">
-            <InfoItem 
-              icon={<FaInfoCircle />} 
-              label="Bio" 
-              value={counselorInfo.personalInfo.bio} 
-            />
+            )}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaUser className="text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="fullName"
+                      id="fullName"
+                      value={formData.fullName}
+                      onChange={handleInputChange}
+                        className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3 pl-10"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
+                    Department
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaBuilding className="text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="department"
+                      id="department"
+                      value={formData.department}
+                      onChange={handleInputChange}
+                     className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3 pl-10"
+                      placeholder="Counseling Services"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                    Mobile Number
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaPhone className="text-gray-400" />
+                    </div>
+                    <input
+                      type="tel"
+                      name="mobileNumber"
+                      id="mobileNumber"
+                      value={formData.mobileNumber}
+                      onChange={handleInputChange}
+                     className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3 pl-10"
+                      placeholder="+1 (123) 456-7890"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="profilePicture" className="block text-sm font-medium text-gray-700 mb-1">
+                    Profile Picture
+                  </label>
+                  <input
+                    type="file"
+                    name="profilePicture"
+                    id="profilePicture"
+                    onChange={handleInputChange}
+                     className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3 pl-10"
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                  Bio
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 pt-3 flex items-start pointer-events-none">
+                    <FaInfoCircle className="text-gray-400" />
+                  </div>
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    rows="4"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                  className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3 pl-10"
+                    placeholder="Tell us about yourself and your expertise..."
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-end">
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  disabled={loading}
+                >
+                  {loading ? "Updating..." : "Update Profile"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      ) : (
-        <p className="text-gray-700">No counselor information available.</p>
-      )}
-    </section>
+      </div>
+    </Background>
   );
-}
+};
 
-export default CounselorInfoSection;
+export default CounselorInfoForm;
