@@ -70,7 +70,7 @@ const PersonalInfoForm = () => {
       setMessage(response.data.message);
       setError("");
       setTimeout(() => {
-        navigate("/students/user-personalization");
+        navigate("/student/user-personalization");
       }, 2000);
     } catch (error) {
       if (error.response) {
