@@ -27,7 +27,7 @@ const Articles = () => {
 
   const handleArticleClick = (article) => {
     setSelectedArticle(article);
-    navigate(`/student/articles/${article.id}`);
+    navigate(`/counselor/articles/${article.id}`);
   };
 
   const indexOfLastArticle = currentPage * articlesPerPage;
