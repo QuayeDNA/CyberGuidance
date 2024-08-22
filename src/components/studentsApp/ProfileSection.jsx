@@ -11,9 +11,9 @@ function ProfileSection() {
     const fetchProfileData = async () => {
       try {
         const response = await axios.get('https://cyber-guidance.onrender.com/api/user-info/', {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem('token')}`,
-              },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         });
         setProfileData(response.data.user);
       } catch (err) {
@@ -51,15 +51,15 @@ function ProfileSection() {
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-8">
           <div className="flex-shrink-0 w-32 h-32 rounded-full overflow-hidden shadow-lg">
             <img
-              src={profileData.profilePicture || 'https://via.placeholder.com/150'}
-              alt=""
+              src={`https://picsum.photos/200?random=${profileData._id}`}
+              alt="Profile"
               className="w-full h-full object-cover"
             />
           </div>
           <div className="flex flex-col">
-            <h2 className="text-xl font-bold">{profileData.username || 'N/A'}</h2>
+            <h2 className="text-xl font-bold">{profileData.personalInfo.fullName || 'N/A'}</h2>
             <p className="text-gray-700">{profileData.email || 'N/A'}</p>
-            {/* Add more profile data fields as needed */}
+            <p className="text-gray-700">{profileData.username || 'N/A'}</p>
           </div>
         </div>
       ) : (
