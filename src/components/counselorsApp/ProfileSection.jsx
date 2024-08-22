@@ -53,11 +53,13 @@ function ProfileSection() {
       ) : profileData ? (
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-8">
           <div className="flex-shrink-0 w-32 h-32 rounded-full overflow-hidden shadow-lg">
-            <img
+          <img
               src={
-                profileData.profilePicture || "https://placekitten.com/200/200"
+                profileData.imageSource === 'ui-avatars'
+                  ? `https://ui-avatars.com/api/?name=${profileData.username}&background=random&color=fff`
+                  : `https://picsum.photos/200?random=${profileData._id}`
               }
-              alt=""
+              alt={`${profileData.username}'s profile`}
               className="w-full h-full object-cover"
             />
           </div>

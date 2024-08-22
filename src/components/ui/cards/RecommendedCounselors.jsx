@@ -18,7 +18,11 @@ const CounselorsComponent = () => {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
-        setCounselors(response.data.counselors);
+        const counselorsWithImageSource = response.data.counselors.map(counselor => ({
+          ...counselor,
+          imageSource: Math.random() > 0.5 ? 'ui-avatars' : 'picsum'
+        }));
+        setCounselors(counselorsWithImageSource);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching recommended counselors:', error);
@@ -62,7 +66,11 @@ const CounselorsComponent = () => {
         >
           <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mt-4">
             <img
-              src={`https://ui-avatars.com/api/?name=${counselor.username}&background=random&color=fff`}
+              src={
+                counselor.imageSource === 'ui-avatars'
+                  ? `https://ui-avatars.com/api/?name=${counselor.username}&background=random&color=fff`
+                  : `https://picsum.photos/200?random=${counselor._id}`
+              }
               alt={`${counselor.username}'s profile`}
               className="w-full h-full object-cover"
             />
@@ -72,8 +80,8 @@ const CounselorsComponent = () => {
               {counselor.personalInfo?.fullName || counselor.username}
             </h3>
             <p className="text-gray-500 text-sm">
-                  {counselor.specialties.join(", ")}
-                </p>
+              {counselor.specialties.join(", ")}
+            </p>
           </div>
         </div>
       ))}

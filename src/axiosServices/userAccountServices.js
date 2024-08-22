@@ -104,9 +104,8 @@ export const updateAreaOfInterest = async (areaOfInterest) => {
 // Function to update counselor specialties
 export const updateSpecialties = async (specialties) => {
     try {
-      // Retrieve the token from localStorage
-      const userData = JSON.parse(localStorage.getItem('token'));
-      const token = userData?.token;
+      // Retrieve the token from localStorage as a plain string
+      const token = localStorage.getItem('token');
   
       if (!token) {
         throw new Error('No token found, please log in.');

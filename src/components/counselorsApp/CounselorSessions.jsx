@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
-import { FaSpinner, FaEdit, FaTimes, FaCheck } from "react-icons/fa";
-import { Dialog, Transition } from "@headlessui/react";
+import { FaSpinner, FaEdit, FaTimes, FaCheck, FaEye } from "react-icons/fa";
+import PropTypes from "prop-types";
+
+const API_BASE_URL = "https://cyber-guidance.onrender.com";
 
 const AppointmentHistory = () => {
   const [appointments, setAppointments] = useState([]);
@@ -10,47 +12,145 @@ const AppointmentHistory = () => {
   const [error, setError] = useState("");
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
 
   useEffect(() => {
-    const fetchAppointmentHistory = async () => {
-      try {
-        const response = await axios.get(
-          "https://cyber-guidance.onrender.com/api/appointment-history",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setAppointments(response.data.appointments);
-      } catch (error) {
-        setError("Error fetching appointment history.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAppointmentHistory();
   }, []);
 
-  const handleRescheduleAppointment = async (appointment) => {
-    // Add your logic to reschedule the appointment
-    console.log("Rescheduling appointment:", appointment);
+  const fetchAppointmentHistory = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/appointment-history`, {
+        headers: {
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("userData")).token}`,
+        },
+      });
+      setAppointments(response.data.appointments);
+    } catch (error) {
+      setError("Error fetching appointment history.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleCancelAppointment = async (appointment) => {
-    // Add your logic to cancel the appointment
-    console.log("Canceling appointment:", appointment);
-  };
-
-  const handleCompleteAppointment = async (appointment) => {
-    // Add your logic to complete the appointment
-    console.log("Completing appointment:", appointment);
-  };
-
-  const handleViewSessionData = (appointment) => {
+  const handleAction = async (action, appointment) => {
     setSelectedAppointment(appointment);
     setIsModalOpen(true);
+
+    switch (action) {
+      case "reschedule":
+        setModalContent(
+          <RescheduleForm
+            appointment={appointment}
+            onSubmit={handleRescheduleSubmit}
+            onCancel={() => setIsModalOpen(false)}
+          />
+        );
+        break;
+      case "cancel":
+        setModalContent(
+          <ConfirmationDialog
+            message="Are you sure you want to cancel this appointment?"
+            onConfirm={() => handleCancelConfirm(appointment)}
+            onCancel={() => setIsModalOpen(false)}
+          />
+        );
+        break;
+      case "complete":
+        setModalContent(
+          <ConfirmationDialog
+            message="Mark this appointment as completed?"
+            onConfirm={() => handleCompleteConfirm(appointment)}
+            onCancel={() => setIsModalOpen(false)}
+          />
+        );
+        break;
+      case "view":
+        await handleViewSessionData(appointment);
+        break;
+      default:
+        setIsModalOpen(false);
+    }
+  };
+
+  const handleRescheduleSubmit = async (newDate, newTimeSlot) => {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/reschedule-appointment`,
+        {
+          appointmentId: selectedAppointment.id,
+          newDate,
+          newTimeSlot,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${JSON.parse(localStorage.getItem("token")).token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      updateAppointment(response.data.appointment);
+      setIsModalOpen(false);
+    } catch (error) {
+      alert("Error rescheduling appointment. Please try again.");
+    }
+  };
+
+  const handleCancelConfirm = async (appointment) => {
+    try {
+      await axios.put(
+        `${API_BASE_URL}/api/cancel-appointment`,
+        { appointmentId: appointment.id },
+        {
+          headers: {
+            Authorization: `Bearer ${JSON.parse(localStorage.getItem("token")).token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      updateAppointment({ ...appointment, status: "cancelled" });
+      setIsModalOpen(false);
+    } catch (error) {
+      alert("Error canceling appointment. Please try again.");
+    }
+  };
+
+  const handleCompleteConfirm = async (appointment) => {
+    try {
+      await axios.put(
+        `${API_BASE_URL}/api/complete-appointment`,
+        { appointmentId: appointment.id },
+        {
+          headers: {
+            Authorization: `Bearer ${JSON.parse(localStorage.getItem("token")).token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      updateAppointment({ ...appointment, status: "completed" });
+      setIsModalOpen(false);
+    } catch (error) {
+      alert("Error marking appointment as completed. Please try again.");
+    }
+  };
+
+  const handleViewSessionData = async (appointment) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/session-details/${appointment.id}`, {
+        headers: {
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem("token")).token}`,
+        },
+      });
+      setModalContent(<SessionDetails sessionData={response.data} onClose={() => setIsModalOpen(false)} />);
+    } catch (error) {
+      alert("Error fetching session details. Please try again.");
+    }
+  };
+
+  const updateAppointment = (updatedAppointment) => {
+    setAppointments(
+      appointments.map((app) => (app.id === updatedAppointment.id ? updatedAppointment : app))
+    );
   };
 
   if (loading) {
@@ -71,171 +171,241 @@ const AppointmentHistory = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 lg:p-10 max-w-4xl mx-auto mt-10">
-      <h2 className="text-3xl font-bold mb-6 text-center">
-        Appointment History
-      </h2>
+      <h2 className="text-3xl font-bold mb-6 text-center">Appointment History</h2>
       {appointments.length === 0 ? (
         <p className="text-gray-500 text-center">No appointments found.</p>
       ) : (
         <div className="space-y-4">
           {appointments.map((appointment) => (
-            <div
+            <AppointmentCard
               key={appointment.id}
-              className="bg-gray-100 rounded-lg p-4 md:p-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-gray-600 text-xs">
-                    Created on:{" "}
-                    {moment(appointment.date).format(
-                      "Do MMMM YYYY [at] h:mm A"
-                    )}
-                  </p>
-                  <p className="text-gray-600 font-medium">
-                    {appointment.timeSlot}
-                  </p>
-                  <p className="text-gray-600 font-medium">
-                    {appointment.reason}
-                  </p>
-                </div>
-                <div>
-                  <p
-                    className={`font-bold ${
-                      appointment.status === "pending"
-                        ? "text-yellow-500"
-                        : appointment.status === "cancelled"
-                        ? "text-red-500"
-                        : "text-green-500"
-                    }`}>
-                    {appointment.status.charAt(0).toUpperCase() +
-                      appointment.status.slice(1)}
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-end mt-4 space-x-2">
-                <button
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-                  onClick={() => handleRescheduleAppointment(appointment)}>
-                  <FaEdit />
-                  <span>Reschedule</span>
-                </button>
-                <button
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-                  onClick={() => handleCancelAppointment(appointment)}>
-                  <FaTimes />
-                  <span>Cancel</span>
-                </button>
-                <button
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-                  onClick={() => handleCompleteAppointment(appointment)}>
-                  <FaCheck />
-                  <span>Complete</span>
-                </button>
-                <button
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-                  onClick={() => handleViewSessionData(appointment)}>
-                  <span>View Session Data</span>
-                </button>
-              </div>
-            </div>
+              appointment={appointment}
+              onAction={handleAction}
+            />
           ))}
         </div>
       )}
-
-      {selectedAppointment && (
-        <Transition
-          appear
-          show={isModalOpen}
-          as="div"
-          className="fixed inset-0 z-10 overflow-y-auto">
-          <Dialog
-            as="div"
-            className="relative z-10"
-            onClose={() => setIsModalOpen(false)}>
-            <div className="min-h-screen px-4 text-center">
-              <Transition.Child
-                as="div"
-                enter="ease-out duration-300"
-                enterFrom="opacity-0"
-                enterTo="opacity-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0">
-                <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-30" />
-              </Transition.Child>
-
-              <Transition.Child
-                as="div"
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95">
-                <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900">
-                    Appointment Details
-                  </Dialog.Title>
-                  <div className="mt-4">
-                    <p className="font-medium text-gray-900">
-                      {selectedAppointment.reason}
-                    </p>
-                    {selectedAppointment.student && (
-                      <div className="mt-2 text-gray-600">
-                        <p>Student: {selectedAppointment.student.fullName}</p>
-                        <p>Email: {selectedAppointment.student.email}</p>
-                        <p>Phone: {selectedAppointment.student.mobileNumber}</p>
-                      </div>
-                    )}
-                    {selectedAppointment.counselor && (
-                      <div className="mt-2 text-gray-600">
-                        <p>
-                          Counselor: {selectedAppointment.counselor.fullName}
-                        </p>
-                        <p>Email: {selectedAppointment.counselor.email}</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-gray-600">
-                      Created on:{" "}
-                      {moment(selectedAppointment.date).format(
-                        "Do MMMM YYYY [at] h:mm A"
-                      )}
-                    </p>
-                    <p className="text-gray-600">
-                      Time Slot: {selectedAppointment.timeSlot}
-                    </p>
-                    <p
-                      className={`font-bold mt-2 ${
-                        selectedAppointment.status === "pending"
-                          ? "text-yellow-500"
-                          : selectedAppointment.status === "cancelled"
-                          ? "text-red-500"
-                          : "text-green-500"
-                      }`}>
-                      Status:{" "}
-                      {selectedAppointment.status.charAt(0).toUpperCase() +
-                        selectedAppointment.status.slice(1)}
-                    </p>
-                  </div>
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      type="button"
-                      className="inline-flex justify-center px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                      onClick={() => setIsModalOpen(false)}>
-                      Close
-                    </button>
-                  </div>
-                </div>
-              </Transition.Child>
-            </div>
-          </Dialog>
-        </Transition>
-      )}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        {modalContent}
+      </Modal>
     </div>
   );
+};
+
+const AppointmentCard = ({ appointment, onAction }) => {
+  const statusColors = {
+    pending: "bg-yellow-100 text-yellow-800",
+    cancelled: "bg-red-100 text-red-800",
+    completed: "bg-green-100 text-green-800",
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-lg font-semibold">{appointment.reason}</p>
+          <p className="text-sm text-gray-600">
+            {moment(appointment.date).format("MMMM D, YYYY")} at {appointment.timeSlot}
+          </p>
+        </div>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+            statusColors[appointment.status]
+          }`}
+        >
+          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+        </span>
+      </div>
+      <div className="mt-4 flex justify-end space-x-2">
+        <ActionButton
+          icon={<FaEdit />}
+          label="Reschedule"
+          onClick={() => onAction("reschedule", appointment)}
+          color="blue"
+        />
+        <ActionButton
+          icon={<FaTimes />}
+          label="Cancel"
+          onClick={() => onAction("cancel", appointment)}
+          color="red"
+        />
+        <ActionButton
+          icon={<FaCheck />}
+          label="Complete"
+          onClick={() => onAction("complete", appointment)}
+          color="green"
+        />
+        <ActionButton
+          icon={<FaEye />}
+          label="View Details"
+          onClick={() => onAction("view", appointment)}
+          color="gray"
+        />
+      </div>
+    </div>
+  );
+};
+
+AppointmentCard.propTypes = {
+  appointment: PropTypes.object.isRequired,
+  onAction: PropTypes.func.isRequired,
+};
+
+const ActionButton = ({ icon, label, onClick, color }) => {
+  const baseClasses = "flex items-center space-x-1 px-3 py-1 rounded-md text-white text-sm transition-colors duration-200";
+  const colorClasses = {
+    blue: "bg-blue-500 hover:bg-blue-600",
+    red: "bg-red-500 hover:bg-red-600",
+    green: "bg-green-500 hover:bg-green-600",
+    gray: "bg-gray-500 hover:bg-gray-600",
+  };
+
+  return (
+    <button className={`${baseClasses} ${colorClasses[color]}`} onClick={onClick}>
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+};
+
+ActionButton.propTypes = {
+  icon: PropTypes.node.isRequired,
+  label: PropTypes.string.isRequired,
+  onClick: PropTypes.func.isRequired,
+  color: PropTypes.oneOf(["blue", "red", "green", "gray"]),
+};
+
+const Modal = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        {children}
+        <button
+          className="mt-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+          onClick={onClose}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
+Modal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  children: PropTypes.node,
+};
+
+const RescheduleForm = ({ appointment, onSubmit, onCancel }) => {
+  const [newDate, setNewDate] = useState("");
+  const [newTimeSlot, setNewTimeSlot] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(newDate, newTimeSlot);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h3 className="text-lg font-semibold mb-4">Reschedule Appointment</h3>
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newDate">
+          New Date
+        </label>
+        <input
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          id="newDate"
+          type="date"
+          value={newDate}
+          onChange={(e) => setNewDate(e.target.value)}
+          required
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newTimeSlot">
+          New Time Slot
+        </label>
+        <input
+          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          id="newTimeSlot"
+          type="time"
+          value={newTimeSlot}
+          onChange={(e) => setNewTimeSlot(e.target.value)}
+          required
+        />
+      </div>
+      <div className="flex justify-end space-x-2">
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Reschedule
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+};
+
+RescheduleForm.propTypes = {
+  appointment: PropTypes.object.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+};
+
+const ConfirmationDialog = ({ message, onConfirm, onCancel }) => {
+  return (
+    <div>
+      <p className="text-lg mb-4">{message}</p>
+      <div className="flex justify-end space-x-2">
+        <button
+          onClick={onConfirm}
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Confirm
+        </button>
+        <button
+          onClick={onCancel}
+          className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
+ConfirmationDialog.propTypes = {
+  message: PropTypes.string.isRequired,
+  onConfirm: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+};
+
+const SessionDetails = ({ sessionData, onClose }) => {
+  return (
+    <div>
+      <h3 className="text-lg font-semibold mb-4">Session Details</h3>
+      <p><strong>Date:</strong> {moment(sessionData.date).format("MMMM D, YYYY")}</p>
+      <p><strong>Time:</strong> {sessionData.timeSlot}</p>
+      <p><strong>Student:</strong> {sessionData.student.fullName}</p>
+      <p><strong>Counselor:</strong> {sessionData.counselor.fullName}</p>
+      <p><strong>Notes:</strong> {sessionData.notes}</p>
+    </div>
+  );
+};
+
+SessionDetails.propTypes = {
+  sessionData: PropTypes.object.isRequired,
+  onClose: PropTypes.func.isRequired,
 };
 
 export default AppointmentHistory;

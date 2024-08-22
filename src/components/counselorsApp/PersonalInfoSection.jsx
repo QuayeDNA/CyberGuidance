@@ -50,16 +50,16 @@ function PersonalInfoSection() {
       ) : personalInfo ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <p className="text-gray-700">
-            <span className="font-bold">Full Name:</span> {personalInfo.fullName}
+            <span className="font-bold">Full Name:</span> {personalInfo.personalInfo.fullName}
           </p>
           <p className="text-gray-700">
-            <span className="font-bold">Department:</span> {personalInfo.department}
+            <span className="font-bold">Department:</span> {personalInfo.personalInfo.department}
           </p>
           <p className="text-gray-700">
-            <span className="font-bold">Mobile Number:</span> {personalInfo.mobileNumber}
+            <span className="font-bold">Mobile Number:</span> {personalInfo.personalInfo.mobileNumber}
           </p>
           <p className="text-gray-700">
-            <span className="font-bold">Bio:</span> {personalInfo.bio}
+            <span className="font-bold">Bio:</span> {personalInfo.personalInfo.bio}
           </p>
         </div>
       ) : (
