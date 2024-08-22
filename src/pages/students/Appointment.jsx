@@ -1,15 +1,44 @@
-import { useState, useEffect, Fragment  } from 'react';
-import { useAuth } from '../../components/contexts/AuthContext'; // Assuming you have an AuthContext setup
-import { Dialog, Transition, TransitionChild, DialogPanel } from '@headlessui/react';
-import {FaSpinner} from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../components/contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { FaSpinner, FaSearch, FaFilter, FaCalendarAlt } from 'react-icons/fa';
 import moment from 'moment';
+import PropTypes from 'prop-types';
+
+const AppointmentCard = ({ appointment }) => (
+  <div className="bg-white shadow-md rounded-lg p-4 flex items-start space-x-4 hover:shadow-lg transition-shadow duration-300">
+    <img 
+      src={appointment.counselor.avatarUrl || 'https://picsum.photos/200'} 
+      alt={appointment.counselor.fullName} 
+      className="w-16 h-16 rounded-full object-cover"
+    />
+    <div className="flex-grow">
+      <h3 className="text-lg font-semibold text-gray-800">{appointment.counselor.fullName}</h3>
+      <p className="text-sm text-gray-600">{moment(appointment.date).format('MMMM D, YYYY')}</p>
+      <p className="text-sm text-gray-600">{moment(appointment.timeSlot, 'HH:mm').format('h:mm A')}</p>
+      <p className="text-sm font-medium mt-2">Reason: {appointment.reason}</p>
+      <span className={`mt-2 inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+        appointment.status === 'Completed' ? 'bg-green-100 text-green-800' :
+        appointment.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+        'bg-blue-100 text-blue-800'
+      }`}>
+        {appointment.status}
+      </span>
+    </div>
+  </div>
+);
+
+AppointmentCard.propTypes = {
+  appointment: PropTypes.object.isRequired,
+};
 
 const AppointmentHistory = () => {
   const { token } = useAuth();
   const [appointments, setAppointments] = useState([]);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   useEffect(() => {
     const fetchAppointmentHistory = async () => {
@@ -26,6 +55,7 @@ const AppointmentHistory = () => {
 
         const data = await response.json();
         setAppointments(data.appointments);
+        setFilteredAppointments(data.appointments);
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching appointment history:', error);
@@ -36,111 +66,72 @@ const AppointmentHistory = () => {
     fetchAppointmentHistory();
   }, [token]);
 
-  const handleAppointmentClick = (appointment) => {
-    setSelectedAppointment(appointment);
-    setIsDialogOpen(true);
-  };
+  useEffect(() => {
+    const filtered = appointments.filter(appointment => 
+      (appointment.counselor.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       appointment.reason.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (statusFilter === 'All' || appointment.status === statusFilter)
+    );
+    setFilteredAppointments(filtered);
+  }, [searchTerm, statusFilter, appointments]);
 
-  const handleDialogClose = () => {
-    setSelectedAppointment(null);
-    setIsDialogOpen(false);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <FaSpinner className="animate-spin h-8 w-8 text-blue-500" />
+        <p className="ml-2">Loading appointments...</p>
+      </div>
+    );
+  }
+
+  if (appointments.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <FaCalendarAlt className="text-6xl text-gray-400 mb-4" />
+        <h2 className="text-2xl font-semibold text-gray-700 mb-2">No Appointments Yet</h2>
+        <p className="text-gray-600 mb-4">You haven&apos;t booked any appointments.</p>
+        <Link to="/student/counselors" className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-colors duration-300">
+          Book an Appointment
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 md:p-6 lg:p-8">
-      <h1 className="text-3xl font-bold mb-6">Appointment History</h1>
+    <div className="max-w-4xl mx-auto p-4 md:p-6 lg:p-8">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Appointment History</h1>
 
-      {isLoading ? (
-         <div className="flex justify-center items-center h-64">
-         <FaSpinner className="animate-spin h-8 w-8 text-blue-500" />
-         <p className="ml-2">Loading recommended counselors...</p>
-       </div>
-      ) : (
-        <div className="space-y-4">
-          {appointments.map((appointment) => (
-            <div
-              key={appointment.id}
-              className="bg-white shadow-md rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors duration-300"
-              onClick={() => handleAppointmentClick(appointment)}
-            >
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold text-lg mr-4">
-                  {appointment.counselor.fullName.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">{appointment.counselor.fullName}</h3>
-                  <p className="text-gray-600 text-xs">
-                    Created on: {moment(appointment.date).format('Do MMMM YYYY [at] h:mm A')}
-                  </p>
-                </div>
-              </div>
-              <div className="ml-16">
-                <p className="text-gray-600 mb-2"><strong>Reason:</strong> {appointment.reason}</p>
-                <p className="text-gray-600 mb-2"><strong>Time:</strong> {moment(appointment.timeSlot, 'HH:mm').format('h:mm A')}</p>
-                <p className="text-gray-600 mb-2"><strong>Status:</strong> {appointment.status}</p>
-              </div>
-            </div>
-          ))}
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:space-x-4">
+        <div className="relative flex-grow mb-4 md:mb-0">
+          <input
+            type="text"
+            placeholder="Search appointments..."
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </div>
-      )}
-
-      <Transition appear show={isDialogOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={handleDialogClose}>
-          <TransitionChild
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
+        <div className="relative">
+          <select
+            className="appearance-none bg-white border rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <div className="fixed inset-0 bg-black bg-opacity-25" />
-          </TransitionChild>
+            <option value="All">All Statuses</option>
+            <option value="Scheduled">Scheduled</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+          <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
+      </div>
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <TransitionChild
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                  {selectedAppointment && (
-                    <div>
-                      <div className="flex items-center mb-4">
-                        <div className="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold text-lg mr-4">
-                          {selectedAppointment.counselor.fullName.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold">{selectedAppointment.counselor.fullName}</h3>
-                          <p className="text-gray-600 text-sm">{selectedAppointment.date}</p>
-                        </div>
-                      </div>
-                      <p className="text-gray-600 mb-2">{selectedAppointment.reason}</p>
-                      <p className="text-gray-600 mb-2">
-                        Time: {moment(selectedAppointment.timeSlot, 'HH:mm').format('h:mm A')}
-                      </p>
-                      <p className="text-gray-600 mb-2">Status: {selectedAppointment.status}</p>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className="mt-4 inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                    onClick={handleDialogClose}
-                  >
-                    Close
-                  </button>
-                </DialogPanel>
-              </TransitionChild>
-            </div>
-          </div>
-        </Dialog>
-      </Transition>
+      <div className="space-y-4">
+        {filteredAppointments.map((appointment) => (
+          <AppointmentCard key={appointment.id} appointment={appointment} />
+        ))}
+      </div>
     </div>
   );
 };

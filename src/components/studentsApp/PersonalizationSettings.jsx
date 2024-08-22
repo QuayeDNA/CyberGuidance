@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FaSpinner } from 'react-icons/fa';
 
 const PersonalizationSettings = () => {
@@ -38,38 +38,6 @@ const PersonalizationSettings = () => {
         { name: 'Exams Preparation', color: 'bg-cyan-500' },
     ];
 
-
-    useEffect(() => {
-        const fetchAreaOfInterest = async () => {
-            try {
-                const response = await fetch('https://cyber-guidance.onrender.com/user-info', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({ email: localStorage.getItem('userEmail') })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch user info');
-                }
-
-                const data = await response.json();
-                if (data.user && data.user.areaOfInterest) {
-                    setSelectedIssues(data.user.areaOfInterest);
-                }
-            } catch (error) {
-                console.error('Error fetching user info:', error);
-                setErrorMessage('Failed to load user preferences. Please try again.');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAreaOfInterest();
-    }, []);
-
     const toggleIssue = (issue) => {
         setSelectedIssues((prev) =>
             prev.includes(issue)
@@ -104,6 +72,7 @@ const PersonalizationSettings = () => {
             setErrorMessage('Failed to update area of interest. Please try again.');
         } finally {
             setIsSubmitting(false);
+            setIsLoading(false);
         }
     };
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import {
   FaUserCircle,
@@ -12,15 +12,13 @@ import {
   FaUserTie,
   FaUserShield,
   FaPhoneAlt,
-  FaPencilAlt,
   FaCloudUploadAlt,
 } from "react-icons/fa";
 import Background from "../../components/Background";
 import { useNavigate } from "react-router-dom";
 
-
 const PersonalInfoForm = () => {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     fullName: "",
     idCardNumber: "",
     yearOfStudy: "",
@@ -33,11 +31,10 @@ const PersonalInfoForm = () => {
     hallOfResidence: "",
     maritalStatus: "",
     mobileNumber: "",
-    bio: "",
     profilePicture: null,
-  });
+  };
 
-
+  const [formData, setFormData] = useState(initialFormData);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,10 +42,7 @@ const PersonalInfoForm = () => {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: files ? files[0] : value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: files ? files[0] : value }));
   };
 
   const handleSubmit = async (e) => {
@@ -69,24 +63,69 @@ const PersonalInfoForm = () => {
       );
       setMessage(response.data.message);
       setError("");
-      setTimeout(() => {
-        navigate("/student/user-personalization");
-      }, 2000);
+      setTimeout(() => navigate("/student/user-personalization"), 2000);
     } catch (error) {
-      if (error.response) {
-        setError(error.response.data.message);
-      } else {
-        setError("An unknown error occurred. Please try again later.");
-      }
-      setMessage("");
+      setError(
+        error.response?.data.message ||
+          "An unknown error occurred. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSkip = () => {
-    navigate('/student/user-personalization');
-};
+  const handleSkip = () => navigate("/student/user-personalization");
+
+  const renderField = (icon, name, label, type = "text", options = null) => (
+    <div className="flex items-center mb-4">
+      {React.createElement(icon, { className: "text-gray-500 mr-2" })}
+      <div className="flex-grow">
+        <label htmlFor={name} className="block font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+        {type === "select" ? (
+          <select
+            id={name}
+            name={name}
+            value={formData[name]}
+            onChange={handleInputChange}
+           className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3"
+          >
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        ) : type === "radio" ? (
+          <div className="flex space-x-4">
+            {options.map((option) => (
+              <label key={option} className="flex items-center">
+                <input
+                  type="radio"
+                  name={name}
+                  value={option}
+                  checked={formData[name] === option}
+                  onChange={handleInputChange}
+                  className="mr-2"
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        ) : (
+          <input
+            type={type}
+            id={name}
+            name={name}
+            value={formData[name]}
+            onChange={handleInputChange}
+            className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3"
+          />
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <Background>
@@ -104,262 +143,47 @@ const PersonalInfoForm = () => {
         )}
         {!message && !error && (
           <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4">
-            Please provide your personal information so we can better understand
-            your needs and provide personalized counseling services. This
-            information will be kept confidential and used solely for the
-            purpose of improving your experience.
+            Please provide your personal information for personalized counseling
+            services. This information will be kept confidential.
           </div>
         )}
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center">
-            <FaUserCircle className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="fullName"
-                className="block font-medium text-gray-700">
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaIdCard className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="idCardNumber"
-                className="block font-medium text-gray-700">
-                ID Card Number
-              </label>
-              <input
-                type="text"
-                id="idCardNumber"
-                name="idCardNumber"
-                value={formData.idCardNumber}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaGraduationCap className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="yearOfStudy"
-                className="block font-medium text-gray-700">
-                Year of Study
-              </label>
-              <input
-                type="text"
-                id="yearOfStudy"
-                name="yearOfStudy"
-                value={formData.yearOfStudy}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaUniversity className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="faculty"
-                className="block font-medium text-gray-700">
-                Faculty
-              </label>
-              <input
-                type="text"
-                id="faculty"
-                name="faculty"
-                value={formData.faculty}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaGlobe className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="religion"
-                className="block font-medium text-gray-700">
-                Religion
-              </label>
-              <input
-                type="text"
-                id="religion"
-                name="religion"
-                value={formData.religion}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaTransgender className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="gender"
-                className="block font-medium text-gray-700">
-                Gender
-              </label>
-              <input
-                type="text"
-                id="gender"
-                name="gender"
-                value={formData.gender}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaUserClock className="text-gray-500 mr-2" />
-            <div>
-              <label htmlFor="age" className="block font-medium text-gray-700">
-                Age
-              </label>
-              <input
-                type="text"
-                id="age"
-                name="age"
-                value={formData.age}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaUserGraduate className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="programOfStudy"
-                className="block font-medium text-gray-700">
-                Program of Study
-              </label>
-              <input
-                type="text"
-                id="programOfStudy"
-                name="programOfStudy"
-                value={formData.programOfStudy}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaUserTie className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="department"
-                className="block font-medium text-gray-700">
-                Department
-              </label>
-              <input
-                type="text"
-                id="department"
-                name="department"
-                value={formData.department}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaUserShield className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="hallOfResidence"
-                className="block font-medium text-gray-700">
-                Hall of Residence
-              </label>
-              <input
-                type="text"
-                id="hallOfResidence"
-                name="hallOfResidence"
-                value={formData.hallOfResidence}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaUserTie className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="maritalStatus"
-                className="block font-medium text-gray-700">
-                Marital Status
-              </label>
-              <input
-                type="text"
-                id="maritalStatus"
-                name="maritalStatus"
-                value={formData.maritalStatus}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FaPhoneAlt className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="mobileNumber"
-                className="block font-medium text-gray-700">
-                Mobile Number
-              </label>
-              <input
-                type="text"
-                id="mobileNumber"
-                name="mobileNumber"
-                value={formData.mobileNumber}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
-          </div>
-
-          <div className="md:col-span-2 flex items-center">
-            <FaPencilAlt className="text-gray-500 mr-2" />
-            <div>
-              <label htmlFor="bio" className="block font-medium text-gray-700">
-                Bio
-              </label>
-              <textarea
-                id="bio"
-                name="bio"
-                value={formData.bio}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-                rows={3}
-              />
-            </div>
-          </div>
-          <div className="md:col-span-2 flex items-center">
-            <FaCloudUploadAlt className="text-gray-500 mr-2" />
-            <div>
-              <label
-                htmlFor="profilePicture"
-                className="block font-medium text-gray-700">
-                Profile Picture
-              </label>
-              <input
-                type="file"
-                id="profilePicture"
-                name="profilePicture"
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-blue-500 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2"
-              />
-            </div>
+          {renderField(FaUserCircle, "fullName", "Full Name")}
+          {renderField(FaIdCard, "idCardNumber", "ID Card Number")}
+          {renderField(
+            FaGraduationCap,
+            "yearOfStudy",
+            "Year of Study",
+            "select",
+            ["1st", "2nd", "3rd", "4th", "5th"]
+          )}
+          {renderField(FaUniversity, "faculty", "Faculty")}
+          {renderField(FaGlobe, "religion", "Religion")}
+          {renderField(FaTransgender, "gender", "Gender", "radio", [
+            "Male",
+            "Female",
+            "Other",
+          ])}
+          {renderField(FaUserClock, "age", "Age", "number")}
+          {renderField(FaUserGraduate, "programOfStudy", "Program of Study")}
+          {renderField(FaUserTie, "department", "Department")}
+          {renderField(FaUserShield, "hallOfResidence", "Hall of Residence")}
+          {renderField(FaUserTie, "maritalStatus", "Marital Status", "select", [
+            "Single",
+            "Married",
+            "Divorced",
+            "Widowed",
+          ])}
+          {renderField(FaPhoneAlt, "mobileNumber", "Mobile Number", "tel")}
+          <div className="md:col-span-2">
+            {renderField(
+              FaCloudUploadAlt,
+              "profilePicture",
+              "Profile Picture",
+              "file"
+            )}
           </div>
           <div className="md:col-span-2 flex justify-end space-x-4">
             <button
@@ -369,12 +193,11 @@ const PersonalInfoForm = () => {
               {loading ? "Saving..." : "Save"}
             </button>
             <button
-            type="button"
-            onClick={handleSkip}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Skip
-          </button>
+              type="button"
+              onClick={handleSkip}
+              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+              Skip
+            </button>
           </div>
         </form>
       </div>
