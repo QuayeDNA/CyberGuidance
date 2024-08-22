@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaUser, FaLock, FaEnvelope, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { signupUser } from '../../axiosServices/authServices'; // Import the signupUser function
 
 const AdminSignup = () => {
   const [username, setUsername] = useState('');
@@ -25,34 +25,23 @@ const AdminSignup = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://cyber-guidance.onrender.com/api/admin-signup', {
-        username,
-        email,
-        password,
-      });
+      const userData = { username, email, password };
+      const response = await signupUser(userData, 'admin');
 
-      if (response.status === 201) {
-        const { message, token } = response.data;
+      const { message, token } = response;
 
-        // Store the token in localStorage or a secure cookie
-        localStorage.setItem('adminToken', token);
+      // Store the token in localStorage or a secure cookie
+      localStorage.setItem('adminToken', token);
 
-        // Show success message
-        alert(message);
+      // Show success message
+      alert(message);
 
-        // Navigate to admin overview or login page
-        navigate('/admin/login');
-      } else {
-        throw new Error('Unexpected response status');
-      }
+      // Navigate to admin overview or login page
+      navigate('/admin/login');
     } catch (err) {
       let errorMessage = 'Signup failed. Please try again.';
-      if (err.response) {
-        if (err.response.status === 400) {
-          errorMessage = err.response.data.message || 'Invalid input. Please check your data.';
-        } else if (err.response.status === 500) {
-          errorMessage = 'Internal server error. Please try again later.';
-        }
+      if (err.message) {
+        errorMessage = err.message;
       }
       setError(errorMessage);
     } finally {

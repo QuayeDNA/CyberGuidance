@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaBell, FaSignOutAlt, FaBars, FaUserCircle, FaCalendarAlt, FaHome, FaComments, FaClipboardList } from 'react-icons/fa';
+import { FaBell, FaSignOutAlt, FaBars, FaUserCircle, FaCalendarAlt, FaHome, FaComments,FaRegNewspaper } from 'react-icons/fa';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../components/contexts/AuthContext'; // Import useAuth hook
@@ -19,7 +19,7 @@ function Navbar() {
         { id: 2, to: '/counselor/sessions', icon: <FaCalendarAlt className="mr-2" />, text: 'Sessions' },
         { id: 3, to: '/counselor/message', icon: <FaComments className="mr-2" />, text: 'Messages' },
         { id: 4, to: '/counselor/user', icon: <FaUserCircle className='mr-2' />, text: "Profile" },
-        { id: 5, to: '/counselor/notes', icon: <FaClipboardList className='mr-2' />, text: "Notes" }
+        { id: 5, to: '/counselor/articles', icon: <FaRegNewspaper className='mr-2' />, text: "Articles" }
     ];
 
     useEffect(() => {

@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { motion } from "framer-motion";
-import { FaSearch, FaEdit, FaTrash, FaUserPlus } from "react-icons/fa";
-import axios from "axios";
+import { FaSearch, FaEdit, FaTrash, FaUserPlus, FaInfoCircle } from "react-icons/fa";
+import { signupUser } from "../../axiosServices/authServices";
+import { getAllCounselors, getUserInfo } from "../../axiosServices/userDataServices";
+import { Dialog, Transition, TransitionChild, DialogTitle } from "@headlessui/react";
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,11 +19,29 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchCounselors = async () => {
+      setLoading(true);
+      try {
+        const counselors = await getAllCounselors();
+        setUsers(counselors);
+      } catch (error) {
+        setError(error.message || "Failed to fetch counselors.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCounselors();
+  }, []);
 
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleAddUser = async (e) => {
@@ -31,19 +51,19 @@ const UserManagement = () => {
     setMessage(null);
 
     try {
-      const response = await axios.post(
-        "https://cyber-guidance.onrender.com/api/counselor-signup",
+      const response = await signupUser(
         {
           username: newUser.name,
           email: newUser.email,
           password: newUser.password,
-        }
+        },
+        "counselor"
       );
 
       setUsers([
         ...users,
         {
-          id: response.data.id,
+          id: response.id,
           name: newUser.name,
           email: newUser.email,
           role: "Counselor",
@@ -51,9 +71,9 @@ const UserManagement = () => {
       ]);
       setNewUser({ name: "", email: "", role: "Counselor", password: "" });
       setIsAddingUser(false);
-      setMessage(response.data.message || "Counselor created successfully.");
+      setMessage(response.message || "Counselor created successfully.");
     } catch (error) {
-      setError(error.response?.data?.message || "Failed to create counselor.");
+      setError(error.message || "Failed to create counselor.");
     } finally {
       setLoading(false);
     }
@@ -75,6 +95,19 @@ const UserManagement = () => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       setUsers(users.filter((u) => u.id !== id));
       // Here you would typically make an API call to delete the user from your backend
+    }
+  };
+
+  const handleViewUserDetails = async (userId) => {
+    setLoading(true);
+    try {
+      const user = await getUserInfo(userId);
+      setSelectedUser(user);
+      setIsUserDetailsOpen(true);
+    } catch (error) {
+      setError(error.message || "Failed to fetch user details.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -220,8 +253,13 @@ const UserManagement = () => {
                   </button>
                   <button
                     onClick={() => handleDeleteUser(user.id)}
-                    className="text-red-600 hover:text-red-900">
+                    className="text-red-600 hover:text-red-900 mr-2">
                     <FaTrash />
+                  </button>
+                  <button
+                    onClick={() => handleViewUserDetails(user.id)}
+                    className="text-blue-600 hover:text-blue-900">
+                    <FaInfoCircle />
                   </button>
                 </td>
               </tr>
@@ -229,6 +267,73 @@ const UserManagement = () => {
           </tbody>
         </table>
       </div>
+
+      <Transition appear show={isUserDetailsOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-10 overflow-y-auto"
+          onClose={() => setIsUserDetailsOpen(false)}
+        >
+          <div className="min-h-screen px-4 text-center">
+            <TransitionChild
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+            </TransitionChild>
+
+            <span
+              className="inline-block h-screen align-middle"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+            <TransitionChild
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                <DialogTitle
+                  as="h3"
+                  className="text-lg font-medium leading-6 text-gray-900"
+                >
+                  User Details
+                </DialogTitle>
+                <div className="mt-2">
+                  {selectedUser && (
+                    <div>
+                      <p><strong>Name:</strong> {selectedUser.name}</p>
+                      <p><strong>Email:</strong> {selectedUser.email}</p>
+                      <p><strong>Role:</strong> {selectedUser.role}</p>
+                      {/* Add more user details here if needed */}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    className="inline-flex justify-center px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                    onClick={() => setIsUserDetailsOpen(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </TransitionChild>
+          </div>
+        </Dialog>
+      </Transition>
     </motion.div>
   );
 };

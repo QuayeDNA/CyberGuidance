@@ -1,414 +1,241 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
-import { FaCalendar, FaClock, FaMapMarkerAlt, FaVideo, FaSearch, FaFilter, FaArrowLeft, FaPrint } from 'react-icons/fa';
-import { Tab, TabList, TabPanel, TabGroup, TabPanels } from '@headlessui/react';
-import PropTypes from 'prop-types';
-import PrintableSessionLog from './PrintableSessionLog';
-import ReactToPrint from 'react-to-print';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import moment from "moment";
+import { FaSpinner, FaEdit, FaTimes, FaCheck } from "react-icons/fa";
+import { Dialog, Transition } from "@headlessui/react";
 
-const CounselorSessions = () => {
-  const [clients, setClients] = useState([]);
-  const [filter, setFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [selectedSession, setSelectedSession] = useState(null);
-  const [sessionNotes, setSessionNotes] = useState('');
-  const clientsPerPage = 10;
-  const printableRef = useRef();
+const AppointmentHistory = () => {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchClients();
+    const fetchAppointmentHistory = async () => {
+      try {
+        const response = await axios.get(
+          "https://cyber-guidance.onrender.com/api/appointment-history",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setAppointments(response.data.appointments);
+      } catch (error) {
+        setError("Error fetching appointment history.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppointmentHistory();
   }, []);
 
-  const fetchClients = async () => {
-    try {
-      // Simulating an API call
-      const response = await new Promise(resolve =>
-        setTimeout(() => resolve([
-          {
-            id: 1,
-            name: 'John Doe',
-            sessions: [
-              { id: 1, date: new Date(2023, 6, 25, 14, 30), status: 'upcoming', notes: '', location: 'Office', method: 'in-person' },
-              { id: 2, date: new Date(2023, 6, 18, 10, 0), status: 'completed', notes: 'Discussed career goals and potential paths.', location: 'Video Call', method: 'online' },
-            ]
-          },
-          {
-            id: 2,
-            name: 'Jane Smith',
-            sessions: [
-              { id: 3, date: new Date(2023, 6, 26, 11, 15), status: 'completed', notes: '', location: 'Coffee Shop', method: 'in-person' },
-              { id: 4, date: new Date(2023, 6, 19, 15, 45), status: 'completed', notes: 'Worked on stress management techniques.', location: 'Office', method: 'in-person' },
-            ]
-          },
-          // Add more clients as needed
-        ]), 1000)
-      );
-      setClients(response);
-    } catch (error) {
-      console.error('Error fetching clients:', error);
-      // Here you could set an error state and display an error message to the user
-    }
+  const handleRescheduleAppointment = async (appointment) => {
+    // Add your logic to reschedule the appointment
+    console.log("Rescheduling appointment:", appointment);
   };
 
-  const filteredClients = clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (filter === 'all' || client.sessions.some(session => session.status === filter))
-  );
-
-  const indexOfLastClient = currentPage * clientsPerPage;
-  const indexOfFirstClient = indexOfLastClient - clientsPerPage;
-  const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-  const handleViewClientSessions = (client) => {
-    setSelectedClient(client);
+  const handleCancelAppointment = async (appointment) => {
+    // Add your logic to cancel the appointment
+    console.log("Canceling appointment:", appointment);
   };
 
-  const handleViewSessionDetails = (session) => {
-    setSelectedSession(session);
-    setSessionNotes(session.notes);
+  const handleCompleteAppointment = async (appointment) => {
+    // Add your logic to complete the appointment
+    console.log("Completing appointment:", appointment);
   };
 
-  const handleSaveSessionNotes = () => {
-    if (selectedSession) {
-      const updatedClients = clients.map(client =>
-        client.id === selectedClient.id
-          ? {
-              ...client,
-              sessions: client.sessions.map(session =>
-                session.id === selectedSession.id
-                  ? { ...session, notes: sessionNotes }
-                  : session
-              )
-            }
-          : client
-      );
-      setClients(updatedClients);
-      setSelectedSession(null);
-    }
+  const handleViewSessionData = (appointment) => {
+    setSelectedAppointment(appointment);
+    setIsModalOpen(true);
   };
 
-  const handleUpdateSession = (updatedSession) => {
-    const updatedClients = clients.map(client =>
-      client.id === selectedClient.id
-        ? {
-            ...client,
-            sessions: client.sessions.map(session =>
-              session.id === updatedSession.id ? updatedSession : session
-            )
-          }
-        : client
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <FaSpinner className="animate-spin text-blue-500 text-4xl" />
+      </div>
     );
-    setClients(updatedClients);
-    setSelectedSession(updatedSession);
-  };
-
-  const renderClientSessions = (client) => (
-    <TabGroup>
-      <TabList className="flex p-1 space-x-1 bg-blue-900/20 rounded-xl mb-4">
-        <Tab
-          className={({ selected }) =>
-            `w-full py-2.5 text-sm font-medium leading-5 text-blue-700 rounded-lg
-            ${selected ? 'bg-white shadow' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
-          }
-        >
-          Upcoming Sessions
-        </Tab>
-        <Tab
-          className={({ selected }) =>
-            `w-full py-2.5 text-sm font-medium leading-5 text-blue-700 rounded-lg
-            ${selected ? 'bg-white shadow' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
-          }
-        >
-          Session Log
-        </Tab>
-      </TabList>
-      <TabPanels>
-        <TabPanel>
-          {client.sessions.filter(session => session.status === 'upcoming').map(session => (
-            <SessionCard 
-              key={session.id} 
-              session={session} 
-              onViewDetails={() => handleViewSessionDetails(session)}
-            />
-          ))}
-        </TabPanel>
-        <TabPanel>
-        <div className="flex justify-end mb-4">
-            <ReactToPrint
-              trigger={() => (
-                <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out flex items-center">
-                  <FaPrint className="mr-2" />
-                  Print Session Log
-                </button>
-              )}
-              content={() => printableRef.current}
-            />
-          </div>
-          <SessionLogTable sessions={client.sessions.filter(session => session.status === 'completed')} />
-          <div style={{ display: 'none' }}>
-            <PrintableSessionLog 
-              ref={printableRef} 
-              client={client} 
-              sessions={client.sessions.filter(session => session.status === 'completed')} 
-            />
-          </div>
-        </TabPanel>
-      </TabPanels>
-    </TabGroup>
-  );
-
-  const SessionCard = ({ session, onViewDetails }) => (
-    <div className="border-l-4 border-blue-500 bg-white rounded-lg shadow p-4 mb-4">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-lg font-semibold">{format(session.date, 'MMMM d, yyyy')}</span>
-        <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-          {session.status}
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-2 mb-2">
-        <div className="flex items-center">
-          <FaClock className="text-gray-500 mr-2" />
-          <span>{format(session.date, 'h:mm a')}</span>
-        </div>
-        <div className="flex items-center">
-          <FaMapMarkerAlt className="text-gray-500 mr-2" />
-          <span>{session.location}</span>
-        </div>
-        <div className="flex items-center">
-          <FaVideo className="text-gray-500 mr-2" />
-          <span>{session.method}</span>
-        </div>
-      </div>
-      <button
-        onClick={onViewDetails}
-        className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded-md transition duration-300 ease-in-out text-sm"
-      >
-        View Details
-      </button>
-    </div>
-  );
-
-  const SessionLogTable = ({ sessions }) => (
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {sessions.map((session) => (
-          <tr key={session.id}>
-            <td className="px-6 py-4 whitespace-nowrap">{format(session.date, 'MMMM d, yyyy')}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{format(session.date, 'h:mm a')}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{session.location}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{session.method}</td>
-            <td className="px-6 py-4">{session.notes}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-
-  SessionLogTable.propTypes = {
-    sessions: PropTypes.array.isRequired
   }
 
-  SessionCard.propTypes = {
-    session: PropTypes.object.isRequired,     
-    onViewDetails: PropTypes.func.isRequired
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">My Clients</h1>
-      
-      {!selectedClient && (
-        <>
-          <div className="flex flex-col md:flex-row justify-between mb-6">
-            <div className="flex items-center mb-4 md:mb-0">
-              <FaFilter className="text-gray-600 mr-2 text-md" />
-              <select 
-                value={filter} 
-                onChange={(e) => setFilter(e.target.value)}
-                className="bg-white border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
-            <div className="relative">
-              <FaSearch className="absolute left-3 top-3 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by client name"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="bg-white border border-gray-300 rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64"
-              />
-            </div>
-          </div>
-
-          {currentClients.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <p className="text-xl text-gray-600">No clients found. Start adding new clients to see them here!</p>
-            </div>
-          ) : (
-            <AnimatePresence>
-            {currentClients.map(client => (
-              <motion.div
-                key={client.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-md p-6 mb-4"
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold text-gray-800">{client.name}</h2>
-                  <span className="text-sm text-gray-600">{client.sessions.length} sessions</span>
+    <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 lg:p-10 max-w-4xl mx-auto mt-10">
+      <h2 className="text-3xl font-bold mb-6 text-center">
+        Appointment History
+      </h2>
+      {appointments.length === 0 ? (
+        <p className="text-gray-500 text-center">No appointments found.</p>
+      ) : (
+        <div className="space-y-4">
+          {appointments.map((appointment) => (
+            <div
+              key={appointment.id}
+              className="bg-gray-100 rounded-lg p-4 md:p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-gray-600 text-xs">
+                    Created on:{" "}
+                    {moment(appointment.date).format(
+                      "Do MMMM YYYY [at] h:mm A"
+                    )}
+                  </p>
+                  <p className="text-gray-600 font-medium">
+                    {appointment.timeSlot}
+                  </p>
+                  <p className="text-gray-600 font-medium">
+                    {appointment.reason}
+                  </p>
                 </div>
+                <div>
+                  <p
+                    className={`font-bold ${
+                      appointment.status === "pending"
+                        ? "text-yellow-500"
+                        : appointment.status === "cancelled"
+                        ? "text-red-500"
+                        : "text-green-500"
+                    }`}>
+                    {appointment.status.charAt(0).toUpperCase() +
+                      appointment.status.slice(1)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end mt-4 space-x-2">
                 <button
-                  onClick={() => handleViewClientSessions(client)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out"
-                >
-                  View Sessions
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                  onClick={() => handleRescheduleAppointment(appointment)}>
+                  <FaEdit />
+                  <span>Reschedule</span>
                 </button>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          )}
-
-          <div className="flex justify-center mt-6">
-            {Array.from({ length: Math.ceil(filteredClients.length / clientsPerPage) }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => paginate(index + 1)}
-                className={`mx-1 px-3 py-1 rounded-md ${
-                  currentPage === index + 1
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-{selectedClient && !selectedSession && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center mb-6">
-            <button
-              onClick={() => setSelectedClient(null)}
-              className="mr-4 text-blue-500 hover:text-blue-600"
-            >
-              <FaArrowLeft size={24} />
-            </button>
-            <h2 className="text-2xl font-bold">{selectedClient.name}&apos;s Sessions</h2>
-          </div>
-          {selectedClient.sessions.length === 0 ? (
-            <p className="text-xl text-gray-600 text-center">No sessions found for this client.</p>
-          ) : (
-            renderClientSessions(selectedClient)
-          )}
+                <button
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                  onClick={() => handleCancelAppointment(appointment)}>
+                  <FaTimes />
+                  <span>Cancel</span>
+                </button>
+                <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                  onClick={() => handleCompleteAppointment(appointment)}>
+                  <FaCheck />
+                  <span>Complete</span>
+                </button>
+                <button
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                  onClick={() => handleViewSessionData(appointment)}>
+                  <span>View Session Data</span>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
-      <AnimatePresence>
-        {selectedSession && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-          >
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
-              <h2 className="text-2xl font-bold mb-4">Session Details: {selectedClient.name}</h2>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center">
-                  <FaCalendar className="text-gray-500 mr-2" />
-                  <input
-                    type="date"
-                    value={format(selectedSession.date, 'yyyy-MM-dd')}
-                    onChange={(e) => handleUpdateSession({...selectedSession, date: new Date(e.target.value)})}
-                    className="border border-gray-300 rounded-md p-2"
-                  />
+
+      {selectedAppointment && (
+        <Transition
+          appear
+          show={isModalOpen}
+          as="div"
+          className="fixed inset-0 z-10 overflow-y-auto">
+          <Dialog
+            as="div"
+            className="relative z-10"
+            onClose={() => setIsModalOpen(false)}>
+            <div className="min-h-screen px-4 text-center">
+              <Transition.Child
+                as="div"
+                enter="ease-out duration-300"
+                enterFrom="opacity-0"
+                enterTo="opacity-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0">
+                <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-30" />
+              </Transition.Child>
+
+              <Transition.Child
+                as="div"
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95">
+                <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900">
+                    Appointment Details
+                  </Dialog.Title>
+                  <div className="mt-4">
+                    <p className="font-medium text-gray-900">
+                      {selectedAppointment.reason}
+                    </p>
+                    {selectedAppointment.student && (
+                      <div className="mt-2 text-gray-600">
+                        <p>Student: {selectedAppointment.student.fullName}</p>
+                        <p>Email: {selectedAppointment.student.email}</p>
+                        <p>Phone: {selectedAppointment.student.mobileNumber}</p>
+                      </div>
+                    )}
+                    {selectedAppointment.counselor && (
+                      <div className="mt-2 text-gray-600">
+                        <p>
+                          Counselor: {selectedAppointment.counselor.fullName}
+                        </p>
+                        <p>Email: {selectedAppointment.counselor.email}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-gray-600">
+                      Created on:{" "}
+                      {moment(selectedAppointment.date).format(
+                        "Do MMMM YYYY [at] h:mm A"
+                      )}
+                    </p>
+                    <p className="text-gray-600">
+                      Time Slot: {selectedAppointment.timeSlot}
+                    </p>
+                    <p
+                      className={`font-bold mt-2 ${
+                        selectedAppointment.status === "pending"
+                          ? "text-yellow-500"
+                          : selectedAppointment.status === "cancelled"
+                          ? "text-red-500"
+                          : "text-green-500"
+                      }`}>
+                      Status:{" "}
+                      {selectedAppointment.status.charAt(0).toUpperCase() +
+                        selectedAppointment.status.slice(1)}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      type="button"
+                      className="inline-flex justify-center px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                      onClick={() => setIsModalOpen(false)}>
+                      Close
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <FaClock className="text-gray-500 mr-2" />
-                  <input
-                    type="time"
-                    value={format(selectedSession.date, 'HH:mm')}
-                    onChange={(e) => {
-                      const [hours, minutes] = e.target.value.split(':');
-                      const newDate = new Date(selectedSession.date);
-                      newDate.setHours(hours);
-                      newDate.setMinutes(minutes);
-                      handleUpdateSession({...selectedSession, date: newDate});
-                    }}
-                    className="border border-gray-300 rounded-md p-2"
-                  />
-                </div>
-                <div className="flex items-center">
-                  <FaMapMarkerAlt className="text-gray-500 mr-2" />
-                  <input
-                    type="text"
-                    value={selectedSession.location}
-                    onChange={(e) => handleUpdateSession({...selectedSession, location: e.target.value})}
-                    placeholder="Location"
-                    className="border border-gray-300 rounded-md p-2"
-                  />
-                </div>
-                <div className="flex items-center">
-                  <FaVideo className="text-gray-500 mr-2" />
-                  <select
-                    value={selectedSession.method}
-                    onChange={(e) => handleUpdateSession({...selectedSession, method: e.target.value})}
-                    className="border border-gray-300 rounded-md p-2"
-                  >
-                    <option value="in-person">In-person</option>
-                    <option value="online">Online</option>
-                  </select>
-                </div>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Session Notes</h3>
-              <textarea
-                value={sessionNotes}
-                onChange={(e) => setSessionNotes(e.target.value)}
-                placeholder="Write your session notes here..."
-                className="w-full h-32 border border-gray-300 rounded-md p-2 mb-4"
-              />
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={handleSaveSessionNotes}
-                  className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out"
-                >
-                  Save Notes
-                </button>
-                <button
-                  onClick={() => setSelectedSession(null)}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md transition duration-300 ease-in-out"
-                >
-                  Close
-                </button>
-              </div>
+              </Transition.Child>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </Dialog>
+        </Transition>
+      )}
     </div>
   );
 };
 
-export default CounselorSessions;
+export default AppointmentHistory;

@@ -1,8 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Background from "../../components/Background";
 import { FaSpinner } from 'react-icons/fa';
 
+const issues = [
+    { name: 'Depression', color: 'bg-blue-400' },
+    { name: 'Stress and Anxiety', color: 'bg-green-400' },
+    { name: 'Coping with Addictions', color: 'bg-yellow-400' },
+    { name: 'Anxiety', color: 'bg-teal-400' },
+    { name: 'Family Issues', color: 'bg-orange-400' },
+    { name: 'Trauma & Abuse', color: 'bg-red-400' },
+    { name: 'Relationship Issues', color: 'bg-purple-400' },
+    { name: 'Sexuality Issues', color: 'bg-pink-400' },
+    { name: 'Coping with Grief and Loss', color: 'bg-indigo-400' },
+    { name: 'Eating Disorder', color: 'bg-cyan-400' },
+    { name: 'Sleeping Disorder', color: 'bg-lime-400' },
+    { name: 'Motivation, Self-esteem and Confidence', color: 'bg-fuchsia-400' },
+    { name: 'Anger Management', color: 'bg-emerald-400' },
+    { name: 'Fatigue', color: 'bg-rose-400' },
+    { name: 'Career Choices', color: 'bg-violet-400' },
+    { name: 'Bipolar Disorder', color: 'bg-amber-400' },
+    { name: 'Social Anxiety', color: 'bg-fuchsia-500' },
+    { name: 'Goal Setting', color: 'bg-pink-500' },
+    { name: 'Concentration, memory and focus (ADHD)', color: 'bg-blue-500' },
+    { name: 'Academic Stress', color: 'bg-green-500' },
+    { name: 'Productivity', color: 'bg-purple-500' },
+    { name: 'Mental Health', color: 'bg-yellow-500' },
+    { name: 'Career Guidance', color: 'bg-teal-500' },
+    { name: 'Financial Guidance', color: 'bg-orange-500' },
+    { name: 'Study Techniques', color: 'bg-lime-500' },
+    { name: 'Time Management', color: 'bg-red-500' },
+    { name: 'Personal Development', color: 'bg-indigo-500' },
+    { name: 'Exams Preparation', color: 'bg-cyan-500' },
+];
 const IssueSelectionPage = () => {
     const [selectedIssues, setSelectedIssues] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -10,37 +40,35 @@ const IssueSelectionPage = () => {
     const [preparationStage, setPreparationStage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
+    useEffect(() => {
+        const fetchAreaOfInterest = async () => {
+            try {
+                const response = await fetch('https://cyber-guidance.onrender.com/user-info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ email: localStorage.getItem('userEmail') }) // Assuming you store the user's email in localStorage
+                });
 
-    const issues = [
-        { name: 'Depression', color: 'bg-blue-400' },
-        { name: 'Stress and Anxiety', color: 'bg-green-400' },
-        { name: 'Coping with Addictions', color: 'bg-yellow-400' },
-        { name: 'Anxiety', color: 'bg-teal-400' },
-        { name: 'Family Issues', color: 'bg-orange-400' },
-        { name: 'Trauma & Abuse', color: 'bg-red-400' },
-        { name: 'Relationship Issues', color: 'bg-purple-400' },
-        { name: 'Sexuality Issues', color: 'bg-pink-400' },
-        { name: 'Coping with Grief and Loss', color: 'bg-indigo-400' },
-        { name: 'Eating Disorder', color: 'bg-cyan-400' },
-        { name: 'Sleeping Disorder', color: 'bg-lime-400' },
-        { name: 'Motivation, Self-esteem and Confidence', color: 'bg-fuchsia-400' },
-        { name: 'Anger Management', color: 'bg-emerald-400' },
-        { name: 'Fatigue', color: 'bg-rose-400' },
-        { name: 'Career Choices', color: 'bg-violet-400' },
-        { name: 'Bipolar Disorder', color: 'bg-amber-400' },
-        { name: 'Social Anxiety', color: 'bg-fuchsia-500' },
-        { name: 'Goal Setting', color: 'bg-pink-500' },
-        { name: 'Concentration, memory and focus (ADHD)', color: 'bg-blue-500' },
-        { name: 'Academic Stress', color: 'bg-green-500' },
-        { name: 'Productivity', color: 'bg-purple-500' },
-        { name: 'Mental Health', color: 'bg-yellow-500' },
-        { name: 'Career Guidance', color: 'bg-teal-500' },
-        { name: 'Financial Guidance', color: 'bg-orange-500' },
-        { name: 'Study Techniques', color: 'bg-lime-500' },
-        { name: 'Time Management', color: 'bg-red-500' },
-        { name: 'Personal Development', color: 'bg-indigo-500' },
-        { name: 'Exams Preparation', color: 'bg-cyan-500' },
-    ];
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user info');
+                }
+
+                const data = await response.json();
+                if (data.user && data.user.areaOfInterest) {
+                    setSelectedIssues(data.user.areaOfInterest);
+                }
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAreaOfInterest();
+    }, []);
 
     const toggleIssue = (issue) => {
         setSelectedIssues((prev) =>
@@ -54,8 +82,8 @@ const IssueSelectionPage = () => {
         setIsSubmitting(true);
         setErrorMessage('');
         try {
-            const response = await fetch('https://cyber-guidance.onrender.com/area-of-interest', {
-                method: 'POST',
+            const response = await fetch('https://cyber-guidance.onrender.com/api/area-of-interest', {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`

@@ -8,29 +8,30 @@ function PersonalInfoSection() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchPersonalInfo = async () => {
-            try {
-                const response = await axios.get('/student/personal-info', {
-                    headers: {
-                        Authorization: 'Bearer yourTokenHere',
-                    },
-                });
-                setPersonalInfo(response.data.student.personalInfo);
-            } catch (err) {
-                if (err.response) {
-                    setError(err.response.data.message);
-                } else if (err.request) {
-                    setError('No response received from server');
-                } else {
-                    setError('An error occurred');
-                }
-            } finally {
-                setLoading(false);
+        const fetchProfileData = async () => {
+          try {
+            const response = await axios.get('https://cyber-guidance.onrender.com/api/user-info/', {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                  },
+            });
+            setPersonalInfo(response.data.user);
+          } catch (err) {
+            if (err.response) {
+              setError(err.response.data.message);
+            } else if (err.request) {
+              setError('No response received from server');
+            } else {
+              setError('An error occurred');
             }
+          } finally {
+            setLoading(false);
+          }
         };
-
-        fetchPersonalInfo();
-    }, []);
+    
+        fetchProfileData();
+      }, []);
+    
 
     return (
         <section className="bg-white rounded-lg shadow-md p-6 mb-8">

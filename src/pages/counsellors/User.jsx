@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
-import ProfileSection from '../../components/studentsApp/ProfileSection';
+import ProfileSection from '../../components/counselorsApp/ProfileSection';
 import SecuritySettings from '../../components/counselorsApp/SecuritySettings';
 import PersonalizationSettings from '../../components/counselorsApp/PersonalizationSettings';
-
+import ProfileInfoSession from '../../components/counselorsApp/PersonalInfoSection';
 function User() {
-    const [activeTab, setActiveTab] = useState('user');
+    const [activeTab, setActiveTab] = useState('security');
 
     const handleTabClick = (tab) => {
         setActiveTab(tab);
@@ -17,6 +17,7 @@ function User() {
                 {/* Left Column: User Profile and Personal Information */}
                 <div className="col-span-1">
                     <ProfileSection />
+                    <ProfileInfoSession />
                 </div>
 
                 {/* Right Column: Edit Form with Tabs */}

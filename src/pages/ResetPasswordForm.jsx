@@ -5,6 +5,7 @@ import { FaSpinner } from "react-icons/fa";
 import PropTypes from "prop-types";
 
 const resetPasswordSchema = yup.object().shape({
+  otp: yup.string().required("OTP is required").length(6, "OTP must be 6 digits"),
   newPassword: yup.string().required("New password is required").min(8, "Password must be at least 8 characters"),
   confirmPassword: yup.string().oneOf([yup.ref('newPassword'), null], 'Passwords must match'),
 });
@@ -12,11 +13,34 @@ const resetPasswordSchema = yup.object().shape({
 function ResetPasswordForm({ onSubmit, isLoading }) {
   const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(resetPasswordSchema),
-    defaultValues: { newPassword: "", confirmPassword: "" }
+    defaultValues: { otp: "", newPassword: "", confirmPassword: "" }
   });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div>
+        <label htmlFor="otp" className="block text-gray-700 font-semibold mb-2">
+          Enter OTP
+        </label>
+        <Controller
+          name="otp"
+          control={control}
+          render={({ field }) => (
+            <input
+              {...field}
+              type="text"
+              id="otp"
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.otp ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="Enter 6-digit OTP"
+            />
+          )}
+        />
+        {errors.otp && (
+          <p className="text-red-500 text-sm mt-1">{errors.otp.message}</p>
+        )}
+      </div>
       <div>
         <label htmlFor="newPassword" className="block text-gray-700 font-semibold mb-2">
           New Password
@@ -82,8 +106,8 @@ function ResetPasswordForm({ onSubmit, isLoading }) {
 }
 
 ResetPasswordForm.propTypes = {
-    onSubmit: PropTypes.func.isRequired,
-    isLoading: PropTypes.bool.isRequired,
-    };
+  onSubmit: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool.isRequired,
+};
 
 export default ResetPasswordForm;

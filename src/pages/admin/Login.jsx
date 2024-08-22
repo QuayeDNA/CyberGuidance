@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaEnvelope, FaLock, FaSpinner } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../components/contexts/AuthContext';
+import { loginUser } from '../../axiosServices/authServices'; // Import the loginUser function
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -19,23 +19,19 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://cyber-guidance.onrender.com/api/login', {
-        email,
-        password
-      });
+      const response = await loginUser({ email, password });
 
-      const { isAdmin, isCounselor, isStudent, isFirstLogin, token } = response.data;
-      console.log(response.data);
+      const { isAdmin, isCounselor, isStudent, isFirstLogin, token } = response;
 
-      if (isAdmin && isCounselor) {
+      if (isAdmin) {
         login({ isAdmin, isCounselor, isStudent, isFirstLogin, token });
         navigate('/admin/overview');
       } else {
-        setError('Not authorized as admin and counselor');
+        setError('Not authorized as admin');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -113,13 +109,13 @@ const AdminLogin = () => {
             {isLoading ? (
               <FaSpinner className="animate-spin mr-2" />
             ) : null}
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            {isLoading ? 'Signing In...' : 'Login'}
           </button>
         </form>
         <div className="mt-4 text-center">
-          <a href="#" className="text-sm text-indigo-600 hover:text-indigo-500">
-            Forgot your password?
-          </a>
+          <Link to="/login" className="text-sm text-indigo-600 hover:text-indigo-500">
+            Forgot your password? Navigate to the login page to request a password reset.
+          </Link>
         </div>
         <div className="mt-4 text-center">
           <a href="/admin/signup" className="text-sm text-indigo-600 hover:text-indigo-500">

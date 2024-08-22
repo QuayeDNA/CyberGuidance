@@ -10,12 +10,15 @@ function ProfileSection() {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await axios.get("/counselor/personal-info", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        setProfileData(response.data);
+        const response = await axios.get(
+          "https://cyber-guidance.onrender.com/api/user-info/",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setProfileData(response.data.user);
       } catch (err) {
         if (err.response) {
           setError(err.response.data.message);
@@ -51,7 +54,9 @@ function ProfileSection() {
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-8">
           <div className="flex-shrink-0 w-32 h-32 rounded-full overflow-hidden shadow-lg">
             <img
-              src="https://via.placeholder.com/150"
+              src={
+                profileData.profilePicture || "https://placekitten.com/200/200"
+              }
               alt=""
               className="w-full h-full object-cover"
             />
@@ -61,12 +66,12 @@ function ProfileSection() {
               {profileData.username || "N/A"}
             </h2>
             <p className="text-gray-700">{profileData.email || "N/A"}</p>
-            <div className="flex flex-wrap space-x-2">
-              {profileData.specialties.length > 0 ? (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {profileData.specialties && profileData.specialties.length > 0 ? (
                 profileData.specialties.map((specialty, index) => (
                   <span
                     key={index}
-                    className="bg-blue-100 text-blue-800 text-sm font-semibold mr-2 px-2.5 py-0.5 rounded-full">
+                    className="text-gray-700 bg-blue-100 rounded-full px-4 py-2">
                     {specialty}
                   </span>
                 ))

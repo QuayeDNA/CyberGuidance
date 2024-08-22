@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import axios from "axios";
-import Footer from "../../components/Footer";
-import bgImage from "../../assets/Counselling.jpg";
-import { FiEye, FiEyeOff } from "react-icons/fi";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { signupUser } from "../../axiosServices/authServices"; // Import the signupUser service
 import { FaSpinner } from "react-icons/fa";
+import { FiEye, FiEyeOff } from "react-icons/fi";
+import bgImage from "../../assets/Counselling.jpg";
+import Footer from "../../components/Footer";
 
 // Define the validation schema
 const schema = yup.object().shape({
@@ -56,40 +56,30 @@ function Signup() {
     setError("");
 
     try {
-      const response = await axios.post("https://cyber-guidance.onrender.com/api/signup", {
+      const response = await signupUser({
         username: data.username,
         email: data.email,
         password: data.password,
-      }, {
-
-      });
+      }, 'student'); // Specify the role as 'student'
 
       setIsLoading(false);
       setVerificationSent(true);
 
-      localStorage.setItem("userToken", response.data.token);
+      localStorage.setItem("userToken", response.token);
 
       setTimeout(() => {
         navigate("/login");
-      }, 3000);
+      }, 5000);
     } catch (error) {
       console.error("Signup error:", error);
 
-      if (error.code === 'ECONNABORTED' && retryCount < 2) {
+      if (error.message.includes("timeout") && retryCount < 2) {
         // Retry up to 2 times on timeout
         setError(`Request timed out. Retrying... (Attempt ${retryCount + 1} of 3)`);
         setTimeout(() => handleSignup(data, retryCount + 1), 2000);
       } else {
         setIsLoading(false);
-        if (error.response) {
-          setError(error.response.data.message || "An error occurred during signup.");
-        } else if (error.request) {
-          setError("No response received from the server. Please try again later.");
-        } else if (error.code === 'ECONNABORTED') {
-          setError("The request timed out. The server might be experiencing high load. Please try again later.");
-        } else {
-          setError("An unexpected error occurred. Please try again.");
-        }
+        setError(error.message);
       }
     }
   };
@@ -111,7 +101,7 @@ function Signup() {
             <div className="text-center mt-6 p-4 bg-green-100 text-green-700 rounded-lg">
               <p className="font-semibold">Verification link sent!</p>
               <p className="mt-2">Please check your email to verify your account.</p>
-              <p className="mt-2">Redirecting to verification page...</p>
+              <p className="mt-2">Redirecting to Login page...</p>
             </div>
           </div>
         ) : (
