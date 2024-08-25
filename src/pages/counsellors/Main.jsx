@@ -9,7 +9,6 @@ import User from "./User";
 import Articles from './Articles';
 import PinEntry from '../../components/counselorsApp/PinEntry';
 import CreatePin from '../../components/counselorsApp/CreatePin';
-import MaterialUpload from '../../components/counselorsApp/MaterialUpload';
 
 function Main() {
     const [isPinVerified, setIsPinVerified] = useState(false);
@@ -56,7 +55,6 @@ function Main() {
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="message" element={renderMessagingComponent()} />
                     <Route path="sessions" element={<Sessions />} />  
-                    <Route path="material-upload" element={<MaterialUpload />} />
                     <Route path="articles" element={<Articles />} />
                     <Route path="articles/:id" element={<Articles />} />
                     <Route path="/" element={<Dashboard />} />

@@ -1,22 +1,26 @@
 import Card from "../../components/ui/cards/Card";
 import SessionView from "../../components/studentsApp/SessionCardView";
 import Notes from "../../components/studentsApp/Notes";
-import Materials from "../../components/studentsApp/Materials";
 import ArticlesCarousel from "../../components/studentsApp/ArticleCarousel";
 import SessionCalendar from "../../components/studentsApp/SessionCalendar";
 import RecommendedCounselors from "../../components/ui/cards/RecommendedCounselors";
 import articlesData from '../../components/data/articlesData';
-import { useAuth } from '../../components/contexts/AuthContext'; // Import useAuth hook
+import { useState, useEffect } from 'react';
 
 const Dashboard = () => {
-    const { userData } = useAuth(); // Extract user data
-    const userName = userData?.name || "User"; // Get user's name or default to "User"
+    const [firstName, setFirstName] = useState('');
+    useEffect(() => {
+        const storedFirstName = localStorage.getItem('userFirstName');
+        if (storedFirstName) {
+            setFirstName(storedFirstName);
+        }
+    }, []);
 
     return (
         <div className="container mx-auto px-4">
-            <div className="text-left mb-4">
-                <h2 className="text-2xl font-bold">Hi, {userName}</h2>
-                <p className="text-gray-500">Welcome to your safe space.</p>
+                        <div className="text-left mb-4">
+                <h2 className="text-2xl font-bold">Welcome, {firstName || 'User'}</h2>
+                <p className="text-gray-500">Welcome to your safe space</p>
             </div>
             <RecommendedCounselors />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -46,10 +50,6 @@ const Dashboard = () => {
                         <SessionCalendar />
                     </Card>
                 </div>
-                {/* Card 1 */}
-                <Card title="Materials">
-                    <Materials />
-                </Card>
                 {/* Card 2 */}
                 <ArticlesCarousel articles={articlesData} />
                 {/* Card 3 */}

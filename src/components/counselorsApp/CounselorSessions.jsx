@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
 import { FaSpinner, FaEdit, FaTimes, FaCheck, FaEye } from "react-icons/fa";
@@ -328,14 +328,21 @@ const RescheduleForm = ({ appointment, onSubmit, onCancel }) => {
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newTimeSlot">
           New Time Slot
         </label>
-        <input
+              <select
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           id="newTimeSlot"
-          type="time"
           value={newTimeSlot}
           onChange={(e) => setNewTimeSlot(e.target.value)}
           required
-        />
+        >
+          <option value="10:00-11:00">10:00-11:00</option>
+          <option value="11:00-12:00">11:00-12:00</option>
+          <option value="12:00-13:00">12:00-13:00</option>
+          <option value="13:00-14:00">13:00-14:00</option>
+          <option value="14:00-15:00">14:00-15:00</option>
+          <option value="15:00-16:00">15:00-16:00</option>
+          <option value="16:00-17:00">16:00-17:00</option>
+        </select>
       </div>
       <div className="flex justify-end space-x-2">
         <button

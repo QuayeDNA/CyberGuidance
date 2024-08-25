@@ -1,18 +1,27 @@
 import Card from "../../components/ui/cards/Card";
+import { useState, useEffect } from 'react';
 import SessionView from "../../components/counselorsApp/SessionCardView";
 import ClientNotes from "../../components/counselorsApp/ClientNotes";
 import ArticlesCarousel from "../../components/counselorsApp/ArticleCarousel";
 import SessionCalendar from "../../components/counselorsApp/SessionCalendar";
 import articlesData from '../../components/data/articlesData';
-import Materials from './../../components/counselorsApp/Materials';
 
 const CounselorDashboard = () => {
+    const [firstName, setFirstName] = useState('');
+    useEffect(() => {
+        const storedFirstName = localStorage.getItem('userFirstName');
+        if (storedFirstName) {
+            setFirstName(storedFirstName);
+        }
+    }, []);
+
     return (
         <div className="container mx-auto px-4">
-            <div className="text-left mb-4">
-                <h2 className="text-2xl font-bold">Welcome, Dr. Smith</h2>
+                        <div className="text-left mb-4">
+                <h2 className="text-2xl font-bold">Welcome, {firstName || 'Counselor'}</h2>
                 <p className="text-gray-500">Here&apos;s an overview of your counseling practice.</p>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Card 1 */}
                 <Card title="Upcoming Sessions" showAllLink={{ link: '/counselor/sessions', text: 'Manage Sessions' }}>
@@ -41,9 +50,6 @@ const CounselorDashboard = () => {
                     </Card>
                 </div>
                 {/* Card 1 */}
-                <Card title="Counseling Resources" showAllLink={{ link: '/counselor/material-upload', text: 'View All' }}>
-                    <Materials />
-                </Card>
                 {/* Card 2 */}
                 <ArticlesCarousel articles={articlesData} />
                 {/* Card 3 */}

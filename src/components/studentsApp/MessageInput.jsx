@@ -5,14 +5,14 @@ import PropTypes from 'prop-types';
 
 const MessageInput = ({ onSendMessage }) => {
   const [inputMessage, setInputMessage] = useState('');
+  const currentUserId = JSON.parse(localStorage.getItem('userData')).id;
 
   const handleSendMessage = () => {
     if (inputMessage.trim() !== '') {
       const newMessage = {
-        id: Date.now(),
-        senderId: 2,
+        senderId: currentUserId,
         text: inputMessage,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date().toISOString(),
         status: 'sent'
       };
       onSendMessage(newMessage);
@@ -29,7 +29,7 @@ const MessageInput = ({ onSendMessage }) => {
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder="Type a message..."
           className="flex-1 p-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
         />
         <button
           onClick={handleSendMessage}

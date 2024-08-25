@@ -57,7 +57,7 @@ function ProfileSection() {
             />
           </div>
           <div className="flex flex-col">
-            <h2 className="text-xl font-bold">{profileData.personalInfo.fullName || 'N/A'}</h2>
+            <h2 className="text-xl font-bold">{profileData.personalInfo?.fullName || 'N/A'}</h2>
             <p className="text-gray-700">{profileData.email || 'N/A'}</p>
             <p className="text-gray-700">{profileData.username || 'N/A'}</p>
           </div>

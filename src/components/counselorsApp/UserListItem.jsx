@@ -1,28 +1,43 @@
-// UserListItem.jsx
-import { BsCircleFill } from 'react-icons/bs';
 import PropTypes from 'prop-types';
 
-const UserListItem = ({ user, isSelected, onSelect }) => (
-  <button
-    className={`flex items-center p-4 w-full hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}
-    onClick={onSelect}
-  >
-    <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full mr-4" />
-    <div className="flex-1 text-left">
-      <h3 className="font-semibold">{user.name}</h3>
-      <p className="text-sm text-gray-500 truncate">{user.lastMessage}</p>
-    </div>
-    <BsCircleFill className={`w-3 h-3 ${user.online ? 'text-green-500' : 'text-gray-300'}`} />
-  </button>
-);
+const UserListItem = ({ user, isSelected, onSelect }) => {
+  // Simple hash function to generate a number from a string
+  const hashCode = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  };
+
+  // Generate a unique number for the user's ID
+  const uniqueNumber = user.id ? hashCode(user.id) : 0;
+
+  // Use the unique number to generate a Picsum Photos URL
+  const avatarUrl = user.avatarUrl || `https://picsum.photos/seed/${uniqueNumber}/200`;
+
+  return (
+    <button
+      className={`flex items-center p-4 w-full hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}
+      onClick={onSelect}
+    >
+      <img src={avatarUrl} alt={user.fullName} className="w-12 h-12 rounded-full mr-4" />
+          <div className="flex-1 text-left overflow-hidden">
+        <h3 className="font-semibold">{user.fullName}</h3>
+        <p className="text-sm text-gray-500 truncate">{user.reason}</p>
+      </div>
+    </button>
+  );
+};
 
 UserListItem.propTypes = {
   user: PropTypes.shape({
     id: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    avatar: PropTypes.string.isRequired,
-    lastMessage: PropTypes.string.isRequired,
-    online: PropTypes.bool.isRequired,
+    fullName: PropTypes.string.isRequired,
+    avatarUrl: PropTypes.string,
+    reason: PropTypes.string.isRequired,
   }).isRequired,
   isSelected: PropTypes.bool.isRequired,
   onSelect: PropTypes.func.isRequired,

@@ -4,11 +4,11 @@ import { FiSearch } from 'react-icons/fi';
 import UserListItem from './UserListItem';
 import PropTypes from 'prop-types';
 
-const ChatList = ({ users, selectedUser, onSelectUser, isMobileView }) => {
+const ChatList = ({ counselors, selectedUser, onSelectUser, isMobileView }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCounselors = counselors.filter((counselor) =>
+    counselor.fullName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -18,19 +18,19 @@ const ChatList = ({ users, selectedUser, onSelectUser, isMobileView }) => {
           <input
             type="text"
             className="w-full p-2 pl-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Search..."
+            placeholder="Search counselors..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </div>
       </div>
-      {filteredUsers.map((user) => (
+      {filteredCounselors.map((counselor) => (
         <UserListItem
-          key={user.id}
-          user={user}
-          isSelected={selectedUser.id === user.id}
-          onSelect={() => onSelectUser(user)}
+          key={counselor.id}
+          user={counselor}
+          isSelected={selectedUser && selectedUser.id === counselor.id}
+          onSelect={() => onSelectUser(counselor)}
         />
       ))}
     </div>
@@ -38,8 +38,8 @@ const ChatList = ({ users, selectedUser, onSelectUser, isMobileView }) => {
 };
 
 ChatList.propTypes = {
-  users: PropTypes.array.isRequired,
-  selectedUser: PropTypes.object.isRequired,
+  counselors: PropTypes.array.isRequired,
+  selectedUser: PropTypes.object,
   onSelectUser: PropTypes.func.isRequired,
   isMobileView: PropTypes.bool.isRequired,
 };

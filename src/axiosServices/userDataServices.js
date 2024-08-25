@@ -38,9 +38,9 @@ export const fetchAllUsers = async () => {
         const response = await axios.get('https://cyber-guidance.onrender.com/api/all-users', {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
-              },
+            },
         });
-        return response.data.users; // the response structure is { users: [...] }
+        return response.data.users; // Return the users array directly
     } catch (error) {
         console.error('Error fetching all users:', error);
         throw error;

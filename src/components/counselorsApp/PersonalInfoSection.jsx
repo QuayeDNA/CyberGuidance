@@ -7,6 +7,7 @@ function PersonalInfoSection() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+ 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
@@ -16,6 +17,11 @@ function PersonalInfoSection() {
           },
         });
         setPersonalInfo(response.data.user);
+
+        // Extract first name and store in local storage
+        const fullName = response.data.user.personalInfo.fullName;
+        const firstName = fullName.split(' ')[0];
+        localStorage.setItem('userFirstName', firstName);
       } catch (err) {
         if (err.response) {
           setError(err.response.data.message);
@@ -31,6 +37,7 @@ function PersonalInfoSection() {
 
     fetchProfileData();
   }, []);
+
 
   return (
     <section className="bg-white rounded-lg shadow-md p-6 mb-8">

@@ -57,34 +57,36 @@ const CounselorsComponent = () => {
   }
 
   return (
-    <div className="p-4 overflow-x-auto flex space-x-4">
-      {counselors.map((counselor) => (
-        <div
-          key={counselor._id}
-          className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer p-4"
-          onClick={() => handleCounselorSelect(counselor._id)}
-        >
-          <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mt-4">
-            <img
-              src={
-                counselor.imageSource === 'ui-avatars'
-                  ? `https://ui-avatars.com/api/?name=${counselor.username}&background=random&color=fff`
-                  : `https://picsum.photos/200?random=${counselor._id}`
-              }
-              alt={`${counselor.username}'s profile`}
-              className="w-full h-full object-cover"
-            />
+    <div className="p-4">
+      <div className="flex space-x-4 overflow-x-auto">
+        {counselors.map((counselor) => (
+          <div
+            key={counselor._id}
+            className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer p-4 min-w-[200px]"
+            onClick={() => handleCounselorSelect(counselor._id)}
+          >
+            <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mt-4">
+              <img
+                src={
+                  counselor.imageSource === 'ui-avatars'
+                    ? `https://ui-avatars.com/api/?name=${counselor.username}&background=random&color=fff`
+                    : `https://picsum.photos/200?random=${counselor._id}`
+                }
+                alt={`${counselor.username}'s profile`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-4 text-center">
+              <h3 className="font-semibold text-lg">
+                {counselor.personalInfo?.fullName || counselor.username}
+              </h3>
+              <p className="text-gray-500 text-sm">
+                {counselor.specialties.join(", ")}
+              </p>
+            </div>
           </div>
-          <div className="p-4 text-center">
-            <h3 className="font-semibold text-lg">
-              {counselor.personalInfo?.fullName || counselor.username}
-            </h3>
-            <p className="text-gray-500 text-sm">
-              {counselor.specialties.join(", ")}
-            </p>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };

@@ -16,22 +16,27 @@ function PersonalInfoSection() {
           },
         });
         setPersonalInfo(response.data.user.personalInfo);
-      } catch (err) {
-        if (err.response) {
-          setError(err.response.data.message);
-        } else if (err.request) {
-          setError('No response received from server');
-        } else {
-          setError('An error occurred');
+
+          // Extract first name and store in local storage
+          const fullName = response.data.user.personalInfo.fullName;
+          const firstName = fullName.split(' ')[0];
+          localStorage.setItem('userFirstName', firstName);
+        } catch (err) {
+          if (err.response) {
+            setError(err.response.data.message);
+          } else if (err.request) {
+            setError('No response received from server');
+          } else {
+            setError('An error occurred');
+          }
+        } finally {
+          setLoading(false);
         }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfileData();
-  }, []);
-
+      };
+  
+      fetchProfileData();
+    }, []);
+    
   return (
     <section className="bg-white rounded-lg shadow-md p-6 mb-8">
       <h2 className="text-2xl font-bold mb-4">Personal Information</h2>
