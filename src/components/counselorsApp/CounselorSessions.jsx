@@ -1,7 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import axios from "axios";
 import moment from "moment";
+import SessionFormModal from "./SessionFormModal";
 import { FaSpinner, FaEdit, FaTimes, FaCheck, FaEye } from "react-icons/fa";
+import { Dialog, Transition } from "@headlessui/react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import PropTypes from "prop-types";
 
 const API_BASE_URL = "https://cyber-guidance.onrender.com";
@@ -9,8 +13,6 @@ const API_BASE_URL = "https://cyber-guidance.onrender.com";
 const AppointmentHistory = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
 
@@ -27,16 +29,13 @@ const AppointmentHistory = () => {
       });
       setAppointments(response.data.appointments);
     } catch (error) {
-      setError("Error fetching appointment history.");
+      toast.error("Error fetching appointment history.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleAction = async (action, appointment) => {
-    setSelectedAppointment(appointment);
-    setIsModalOpen(true);
-
     switch (action) {
       case "reschedule":
         setModalContent(
@@ -65,34 +64,32 @@ const AppointmentHistory = () => {
           />
         );
         break;
-      case "view":
-        await handleViewSessionData(appointment);
-        break;
+        case "view":
+          handleViewSessionDetails(appointment);
+          break;
       default:
-        setIsModalOpen(false);
+        return;
     }
+    setIsModalOpen(true);
   };
 
-  const handleRescheduleSubmit = async (newDate, newTimeSlot) => {
+  const handleRescheduleSubmit = async (appointmentId, newDate, newTimeSlot) => {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/reschedule-appointment`,
-        {
-          appointmentId: selectedAppointment.id,
-          newDate,
-          newTimeSlot,
-        },
+        { appointmentId, newDate, newTimeSlot },
         {
           headers: {
-            Authorization: `Bearer ${JSON.parse(localStorage.getItem("token")).token}`,
+            Authorization: `Bearer ${JSON.parse(localStorage.getItem("userData")).token}`,
             "Content-Type": "application/json",
           },
         }
       );
       updateAppointment(response.data.appointment);
       setIsModalOpen(false);
+      toast.success("Appointment rescheduled successfully.");
     } catch (error) {
-      alert("Error rescheduling appointment. Please try again.");
+      toast.error("Error rescheduling appointment. Please try again.");
     }
   };
 
@@ -103,15 +100,16 @@ const AppointmentHistory = () => {
         { appointmentId: appointment.id },
         {
           headers: {
-            Authorization: `Bearer ${JSON.parse(localStorage.getItem("token")).token}`,
+            Authorization: `Bearer ${JSON.parse(localStorage.getItem("userData")).token}`,
             "Content-Type": "application/json",
           },
         }
       );
       updateAppointment({ ...appointment, status: "cancelled" });
       setIsModalOpen(false);
+      toast.success("Appointment cancelled successfully.");
     } catch (error) {
-      alert("Error canceling appointment. Please try again.");
+      toast.error("Error canceling appointment. Please try again.");
     }
   };
 
@@ -122,29 +120,22 @@ const AppointmentHistory = () => {
         { appointmentId: appointment.id },
         {
           headers: {
-            Authorization: `Bearer ${JSON.parse(localStorage.getItem("token")).token}`,
+            Authorization: `Bearer ${JSON.parse(localStorage.getItem("userData")).token}`,
             "Content-Type": "application/json",
           },
         }
       );
       updateAppointment({ ...appointment, status: "completed" });
       setIsModalOpen(false);
+      toast.success("Appointment marked as completed.");
     } catch (error) {
-      alert("Error marking appointment as completed. Please try again.");
+      toast.error("Error marking appointment as completed. Please try again.");
     }
   };
 
-  const handleViewSessionData = async (appointment) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/session-details/${appointment.id}`, {
-        headers: {
-          Authorization: `Bearer ${JSON.parse(localStorage.getItem("token")).token}`,
-        },
-      });
-      setModalContent(<SessionDetails sessionData={response.data} onClose={() => setIsModalOpen(false)} />);
-    } catch (error) {
-      alert("Error fetching session details. Please try again.");
-    }
+  const handleViewSessionDetails = (appointment) => {
+    setModalContent(<SessionDetails sessionData={appointment} onClose={() => setIsModalOpen(false)} />);
+    setIsModalOpen(true);
   };
 
   const updateAppointment = (updatedAppointment) => {
@@ -153,70 +144,71 @@ const AppointmentHistory = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <FaSpinner className="animate-spin text-blue-500 text-4xl" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 lg:p-10 max-w-4xl mx-auto mt-10">
-      <h2 className="text-3xl font-bold mb-6 text-center">Appointment History</h2>
-      {appointments.length === 0 ? (
-        <p className="text-gray-500 text-center">No appointments found.</p>
-      ) : (
-        <div className="space-y-4">
-          {appointments.map((appointment) => (
-            <AppointmentCard
-              key={appointment.id}
-              appointment={appointment}
-              onAction={handleAction}
-            />
-          ))}
-        </div>
-      )}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        {modalContent}
-      </Modal>
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-100 min-h-screen p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-4xl font-bold mb-8 text-center text-indigo-800">Appointment History</h2>
+        {loading ? (
+          <LoadingSpinner />
+        ) : appointments.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="space-y-6">
+            {appointments.map((appointment) => (
+              <AppointmentCard
+                key={appointment.id}
+                appointment={appointment}
+                onAction={handleAction}
+              />
+            ))}
+          </div>
+        )}
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+          {modalContent}
+        </Modal>
+        <ToastContainer position="bottom-right" />
+      </div>
     </div>
   );
 };
 
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center h-64">
+    <FaSpinner className="animate-spin text-indigo-500 text-4xl" />
+  </div>
+);
+
+const EmptyState = () => (
+  <div className="text-center py-12 bg-white rounded-lg shadow-md">
+    <p className="text-gray-500 text-lg">No appointments found.</p>
+  </div>
+);
+
 const AppointmentCard = ({ appointment, onAction }) => {
   const statusColors = {
-    pending: "bg-yellow-100 text-yellow-800",
-    cancelled: "bg-red-100 text-red-800",
-    completed: "bg-green-100 text-green-800",
+    pending: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    cancelled: "bg-red-100 text-red-800 border-red-300",
+    completed: "bg-green-100 text-green-800 border-green-300",
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-      <div className="flex justify-between items-start">
+    <div className="bg-white rounded-lg shadow-md p-6 transition-all hover:shadow-lg border-l-4 border-indigo-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
-          <p className="text-lg font-semibold">{appointment.reason}</p>
+          <p className="text-xl font-semibold text-indigo-800 mb-2">{appointment.reason}</p>
           <p className="text-sm text-gray-600">
             {moment(appointment.date).format("MMMM D, YYYY")} at {appointment.timeSlot}
           </p>
         </div>
         <span
-          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+          className={`px-3 py-1 rounded-full text-xs font-semibold mt-2 md:mt-0 ${
             statusColors[appointment.status]
           }`}
         >
           {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
         </span>
       </div>
-      <div className="mt-4 flex justify-end space-x-2">
+      <div className="mt-6 flex flex-wrap justify-end gap-3">
         <ActionButton
           icon={<FaEdit />}
           label="Reschedule"
@@ -252,7 +244,7 @@ AppointmentCard.propTypes = {
 };
 
 const ActionButton = ({ icon, label, onClick, color }) => {
-  const baseClasses = "flex items-center space-x-1 px-3 py-1 rounded-md text-white text-sm transition-colors duration-200";
+  const baseClasses = "flex items-center space-x-2 px-4 py-2 rounded-md text-white text-sm font-medium transition-colors duration-200";
   const colorClasses = {
     blue: "bg-blue-500 hover:bg-blue-600",
     red: "bg-red-500 hover:bg-red-600",
@@ -276,27 +268,47 @@ ActionButton.propTypes = {
 };
 
 const Modal = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full">
-        {children}
-        <button
-          className="mt-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-          onClick={onClose}
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
         >
-          Close
-        </button>
-      </div>
-    </div>
+          <div className="fixed inset-0 bg-black bg-opacity-25" />
+        </Transition.Child>
+
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                {children}
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
   );
 };
 
 Modal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  children: PropTypes.node,
+  children: PropTypes.node.isRequired,
 };
 
 const RescheduleForm = ({ appointment, onSubmit, onCancel }) => {
@@ -305,18 +317,20 @@ const RescheduleForm = ({ appointment, onSubmit, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(newDate, newTimeSlot);
+    onSubmit(appointment.id, newDate, newTimeSlot);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h3 className="text-lg font-semibold mb-4">Reschedule Appointment</h3>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newDate">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+        Reschedule Appointment
+      </Dialog.Title>
+      <div>
+        <label className="block text-sm font-medium text-gray-700" htmlFor="newDate">
           New Date
         </label>
         <input
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           id="newDate"
           type="date"
           value={newDate}
@@ -324,37 +338,38 @@ const RescheduleForm = ({ appointment, onSubmit, onCancel }) => {
           required
         />
       </div>
-      <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newTimeSlot">
+      <div>
+        <label className="block text-sm font-medium text-gray-700" htmlFor="newTimeSlot">
           New Time Slot
         </label>
-              <select
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        <select
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           id="newTimeSlot"
           value={newTimeSlot}
           onChange={(e) => setNewTimeSlot(e.target.value)}
           required
         >
+          <option value="">Select a time slot</option>
+          <option value="09:00-10:00">09:00-10:00</option>
           <option value="10:00-11:00">10:00-11:00</option>
           <option value="11:00-12:00">11:00-12:00</option>
           <option value="12:00-13:00">12:00-13:00</option>
           <option value="13:00-14:00">13:00-14:00</option>
           <option value="14:00-15:00">14:00-15:00</option>
           <option value="15:00-16:00">15:00-16:00</option>
-          <option value="16:00-17:00">16:00-17:00</option>
         </select>
       </div>
-      <div className="flex justify-end space-x-2">
+      <div className="mt-4 flex justify-end space-x-2">
         <button
           type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           Reschedule
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
         >
           Cancel
         </button>
@@ -371,18 +386,21 @@ RescheduleForm.propTypes = {
 
 const ConfirmationDialog = ({ message, onConfirm, onCancel }) => {
   return (
-    <div>
-      <p className="text-lg mb-4">{message}</p>
-      <div className="flex justify-end space-x-2">
+    <div className="space-y-4">
+      <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+        Confirmation
+      </Dialog.Title>
+      <p className="text-sm text-gray-500">{message}</p>
+      <div className="mt-4 flex justify-end space-x-2">
         <button
           onClick={onConfirm}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
         >
           Confirm
-        </button>
+          </button>
         <button
           onClick={onCancel}
-          className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
         >
           Cancel
         </button>
@@ -398,14 +416,44 @@ ConfirmationDialog.propTypes = {
 };
 
 const SessionDetails = ({ sessionData, onClose }) => {
+  const [isSessionFormOpen, setIsSessionFormOpen] = useState(false);
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-4">Session Details</h3>
-      <p><strong>Date:</strong> {moment(sessionData.date).format("MMMM D, YYYY")}</p>
-      <p><strong>Time:</strong> {sessionData.timeSlot}</p>
-      <p><strong>Student:</strong> {sessionData.student.fullName}</p>
-      <p><strong>Counselor:</strong> {sessionData.counselor.fullName}</p>
-      <p><strong>Notes:</strong> {sessionData.notes}</p>
+    <div className="space-y-4">
+      <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+        Appointment Details
+      </Dialog.Title>
+      <div className="space-y-2">
+        <p><strong className="text-gray-700">Date:</strong> {moment(sessionData.date).format("MMMM D, YYYY")}</p>
+        <p><strong className="text-gray-700">Time:</strong> {sessionData.timeSlot}</p>
+        <p><strong className="text-gray-700">Reason:</strong> {sessionData.reason}</p>
+        <p><strong className="text-gray-700">Status:</strong> {sessionData.status}</p>
+        <p><strong className="text-gray-700">Student:</strong> {sessionData.student.fullName}</p>
+        <p><strong className="text-gray-700">Email:</strong> {sessionData.student.email}</p>
+        <p><strong className="text-gray-700">Mobile Number:</strong> {sessionData.student.mobileNumber}</p>
+      </div>
+      <div className="mt-4 flex justify-between">
+        <button
+          type="button"
+          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-100 px-4 py-2 text-sm font-medium text-indigo-900 hover:bg-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+          onClick={() => setIsSessionFormOpen(true)}
+        >
+          View Sessions Form
+        </button>
+        <button
+          type="button"
+          className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          onClick={onClose}
+        >
+          Close
+        </button>
+      </div>
+      {isSessionFormOpen && (
+        <SessionFormModal
+          appointmentId={sessionData.id}
+          onClose={() => setIsSessionFormOpen(false)}
+          isOpen={isSessionFormOpen}
+        />
+      )}
     </div>
   );
 };
