@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useParams } from "react-router-dom";
-import { Dialog, Transition, DialogPanel, DialogTitle, TransitionChild } from "@headlessui/react";
-import { Fragment } from "react";
-import { FaUserCircle, FaEnvelope, FaCalendarAlt, FaExclamationTriangle, FaPhoneAlt, FaSpinner } from "react-icons/fa";
+import { FaUserCircle, FaEnvelope, FaCalendarAlt, FaExclamationTriangle, FaPhoneAlt, FaSpinner, FaExclamationCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { Dialog, Transition, DialogPanel, DialogTitle, TransitionChild } from "@headlessui/react";
 import { toast } from "react-toastify";
 import { useAuth } from '../../components/contexts/AuthContext';
 import { fetchUserById } from "../../axiosServices/userDataServices";
 import PropTypes from 'prop-types';
 import BookingModal from "./BookingModal";
+import EmergencyBookingButton from '../../components/studentsApp/EmergencyBooking';
 
 const CounselorProfile = () => {
   const { id } = useParams();
@@ -17,6 +17,7 @@ const CounselorProfile = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [isBookAppointmentModalOpen, setIsBookAppointmentModalOpen] = useState(false);
+  const [isEmergencyBookingOpen, setIsEmergencyBookingOpen] = useState(false);
   const { userData } = useAuth();
 
   useEffect(() => {
@@ -24,6 +25,7 @@ const CounselorProfile = () => {
   }, [id, userData?.id]);
 
   const handleReport = () => setIsReportModalOpen(true);
+  
   const fetchCounselorDetails = async () => {
     try {
       const counselorData = await fetchUserById(id);
@@ -41,13 +43,15 @@ const CounselorProfile = () => {
     setIsBookAppointmentModalOpen(true);
   }, []);
 
+  const handleEmergencyBooking = useCallback(() => {
+    setIsEmergencyBookingOpen(true);
+  }, []);
+
   const submitReport = async () => {
     try {
       if (!userData) throw new Error("User not authenticated.");
-      
       // Assume there is an endpoint to submit reports.
       // Replace this with your actual report submission logic.
-
       toast.success("Report submitted successfully.");
       setIsReportModalOpen(false);
       setReportReason("");
@@ -78,36 +82,44 @@ const CounselorProfile = () => {
     );
   }
 
- return (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.5 }}
-    className="container mx-auto px-4 py-8 sm:px-6 lg:px-8"
-  >
-    <CounselorProfileCard
-      counselor={counselor}
-      handleReport={handleReport}
-      handleBookAppointment={handleBookAppointment}
-    />
-   {isBookAppointmentModalOpen && (
-  <BookingModal
-  isOpen={isBookAppointmentModalOpen}
-  onClose={() => setIsBookAppointmentModalOpen(false)}
-  onAppointmentBooked={handleAppointmentBooked}
-  counselorId={counselor?._id}
-  />
-)}
-    <ReportModal
-      isOpen={isReportModalOpen}
-      onClose={() => setIsReportModalOpen(false)}
-      onSubmit={submitReport}
-      reportReason={reportReason}
-      setReportReason={setReportReason}
-    />
-  </motion.div>
-);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.5 }}
+      className="container mx-auto px-4 py-8 sm:px-6 lg:px-8"
+    >
+      <CounselorProfileCard
+        counselor={counselor}
+        handleReport={handleReport}
+        handleBookAppointment={handleBookAppointment}
+        handleEmergencyBooking={handleEmergencyBooking}
+      />
+      {isBookAppointmentModalOpen && (
+        <BookingModal
+          isOpen={isBookAppointmentModalOpen}
+          onClose={() => setIsBookAppointmentModalOpen(false)}
+          onAppointmentBooked={handleAppointmentBooked}
+          counselorId={counselor?._id}
+        />
+      )}
+      <EmergencyBookingButton
+        counselorId={counselor?._id}
+        counselorName={counselor?.personalInfo?.fullName}
+        isOpen={isEmergencyBookingOpen}
+        onClose={() => setIsEmergencyBookingOpen(false)}
+        onBookingInitiated={() => {/* Handle emergency booking initiated */}}
+      />
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmit={submitReport}
+        reportReason={reportReason}
+        setReportReason={setReportReason}
+      />
+    </motion.div>
+  );
 };
 
 const getRandomColor = () => {
@@ -117,7 +129,7 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-const CounselorProfileCard = ({ counselor, handleReport, handleBookAppointment }) => (
+const CounselorProfileCard = ({ counselor, handleReport, handleBookAppointment, handleEmergencyBooking }) => (
   <div className="bg-white shadow-xl rounded-lg overflow-hidden">
     <div className="p-8">
       <div className="flex items-center justify-center mb-6">
@@ -133,7 +145,7 @@ const CounselorProfileCard = ({ counselor, handleReport, handleBookAppointment }
         <span>{counselor?.personalInfo?.mobileNumber}</span>
       </div>
       <div className="flex justify-center space-x-4 mb-8">
-      <button
+        <button
           className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 flex items-center"
           onClick={handleBookAppointment}
         >
@@ -141,8 +153,15 @@ const CounselorProfileCard = ({ counselor, handleReport, handleBookAppointment }
           Book Appointment
         </button>
         <button
-          onClick={handleReport}
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 flex items-center"
+          onClick={handleEmergencyBooking}
+        >
+          <FaExclamationCircle className="mr-2" />
+          Emergency Booking
+        </button>
+        <button
+          onClick={handleReport}
+          className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 flex items-center"
         >
           <FaExclamationTriangle className="mr-2" />
           Report
@@ -173,6 +192,7 @@ CounselorProfileCard.propTypes = {
   counselor: PropTypes.object.isRequired,
   handleReport: PropTypes.func.isRequired,
   handleBookAppointment: PropTypes.func.isRequired,
+  handleEmergencyBooking: PropTypes.func.isRequired,
 };
 
 const ReportModal = ({

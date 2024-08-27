@@ -10,6 +10,7 @@ import UserTable from './components/UserTable';
 import CounselorTable from './components/CounselorTable';
 import DeleteUserModal from './components/DeleteModal';
 import ViewUserModal from './components/ViewUserModal';
+import StudentTable from './components/StudentTable';
 
 const AdminUserManagement = () => {
   const [users, setUsers] = useState([]); // Initialize with an empty array
@@ -113,6 +114,12 @@ const AdminUserManagement = () => {
             `w-full py-2.5 text-sm font-medium text-blue-700 rounded-lg
              ${selected ? 'bg-white shadow' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
           }>
+            Students
+          </Tab>
+          <Tab className={({ selected }) =>
+            `w-full py-2.5 text-sm font-medium text-blue-700 rounded-lg
+             ${selected ? 'bg-white shadow' : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'}`
+          }>
             Counselors
           </Tab>
         </TabList>
@@ -120,6 +127,20 @@ const AdminUserManagement = () => {
           <TabPanel>
             <UserTable
               users={users}
+              onSort={handleSort}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onViewUser={handleViewUser}
+              onDeleteUser={(user) => {
+                setSelectedUser(user);
+                setIsDeleteModalOpen(true);
+              }}
+              error={error}
+            />
+          </TabPanel>
+          <TabPanel>
+            <StudentTable
+              students={Array.isArray(users) ? users.filter(user => user.role === 'student') : []}
               onSort={handleSort}
               sortField={sortField}
               sortDirection={sortDirection}

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
+import { FaComments } from "react-icons/fa"; 
+import {Link} from 'react-router-dom';
 
 const SessionView = () => {
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -102,19 +104,23 @@ const SessionView = () => {
                         {session.timeSlot}
                       </p>
                     </div>
+                    <vr className="border-r border-gray-300 h-12" />
                     <div>
                       <p className="text-sm font-semibold text-gray-700">
                         {session.counselor}
                       </p>
                       <p className="text-sm text-gray-600">
-                        {session.fullName}
+                        {session.reason}
                       </p>
                     </div>
+                    <Link to="/student/message" className="bg-blue-500 p-2 rounded-md shadow-md">
+                      <FaComments className="text-md text-white" />
+                    </Link>
                   </div>
                 ))}
               </div>
             ) : (
-              <p>No upcoming sessions at the moment.</p>
+              <p className="my-12">No upcoming sessions at the moment.</p>
             )}
           </div>
         ) : (

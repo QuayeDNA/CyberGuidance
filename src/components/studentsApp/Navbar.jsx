@@ -1,18 +1,73 @@
 import { useState, useEffect } from "react";
 import { FaBell, FaSignOutAlt, FaBars, FaUserAlt, FaHome, FaComment, FaRegNewspaper, FaCog } from "react-icons/fa";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationModal from "./ConfirmationModal";
 import { useAuth } from '../../components/contexts/AuthContext';
 
-function Navbar() {
-  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
-  const [showMenuDropdown, setShowMenuDropdown] = useState(false);
+const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    // Load notifications from localStorage on component mount
+    const storedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    setNotifications(storedNotifications);
+
+    // Set up an interval to check for new notifications
+    const intervalId = setInterval(() => {
+      checkForNewNotifications();
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const checkForNewNotifications = () => {
+    // Simulate receiving new notifications
+    const chance = Math.random();
+    if (chance < 0.3) { // 30% chance of new notification
+      const newNotification = {
+        id: Date.now(),
+        title: 'New Notification',
+        message: `This is a new notification ${chance.toFixed(2)}`,
+        time: new Date().toLocaleTimeString(),
+        isRead: false,
+      };
+
+      setNotifications(prevNotifications => {
+        let updatedNotifications = [newNotification, ...prevNotifications];
+        
+        // Cap the notifications at 20
+        if (updatedNotifications.length > 20) {
+          updatedNotifications = updatedNotifications.slice(0, 20);
+        }
+
+        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        return updatedNotifications;
+      });
+    }
+  };
+
+  const markAsRead = (id) => {
+    setNotifications(prevNotifications => {
+      const updatedNotifications = prevNotifications.map(notif =>
+        notif.id === id ? { ...notif, isRead: true } : notif
+      );
+      localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+      return updatedNotifications;
+    });
+  };
+
+  return { notifications, markAsRead };
+};
+
+function Navbar() {
+
+  const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false); 
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const { notifications, markAsRead } = useNotifications();
 
   const navigate = useNavigate();
-  const location = useLocation();
   const { logout } = useAuth();
 
   const navLinks = [
@@ -84,16 +139,11 @@ function Navbar() {
           1000
         )
       );
-      setNotifications(response);
+      notifications(response);
     };
 
     fetchNotifications();
   }, []);
-
-  const toggleNotificationDropdown = () => {
-    setShowNotificationDropdown(!showNotificationDropdown);
-    setShowMenuDropdown(false);
-  };
 
   const toggleMenuDropdown = () => {
     setShowMenuDropdown(!showMenuDropdown);
@@ -105,20 +155,11 @@ function Navbar() {
   };
   const handleLogout = () => {
     setShowLogoutModal(true); // Show the logout confirmation modal
-};
+  };
 
-const confirmLogout = async () => {
+  const confirmLogout = async () => {
     await logout();
     navigate('/login');
-};
-
-
-  const markAsRead = (id) => {
-    setNotifications(
-      notifications.map((notif) =>
-        notif.id === id ? { ...notif, isRead: true } : notif
-      )
-    );
   };
 
   return (
@@ -147,14 +188,14 @@ const confirmLogout = async () => {
                 }`
               }>
               {link.icon}
-              <span className={`${location.pathname === link.to ? 'block' : 'hidden'}`}>{link.text}</span>
+              <span>{link.text}</span>
             </NavLink>
           ))}
         </nav>
         <div className="relative flex items-center space-x-6">
           <button
             className="text-gray-500 hover:text-blue-600 transition duration-200 relative"
-            onClick={toggleNotificationDropdown}>
+            onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}>
             <FaBell className="text-lg" />
             {notifications.some((n) => !n.isRead) && (
               <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
@@ -179,17 +220,11 @@ const confirmLogout = async () => {
                           notification.isRead ? "bg-gray-100" : "bg-blue-50"
                         }`}>
                         <div>
-                          <h3 className="text-md font-semibold mb-1">
-                            {notification.title}
-                          </h3>
-                          <p className="text-sm text-gray-700">
-                            {notification.message}
-                          </p>
+                          <h3 className="text-md font-semibold mb-1">{notification.title}</h3>
+                          <p className="text-sm text-gray-700">{notification.message}</p>
                         </div>
                         <div className="flex justify-between items-center">
-                          <p className="text-xs text-gray-500">
-                            {notification.time}
-                          </p>
+                          <p className="text-xs text-gray-500">{notification.time}</p>
                           <button
                             onClick={() => markAsRead(notification.id)}
                             className="text-blue-500 hover:underline text-sm">
@@ -199,9 +234,7 @@ const confirmLogout = async () => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-center text-gray-500">
-                      No notifications
-                    </p>
+                    <p className="text-center text-gray-500">No notifications</p>
                   )}
                 </div>
               </motion.div>
@@ -226,22 +259,21 @@ const confirmLogout = async () => {
                   <FaCog className="mr-2" /> Settings
                 </button>
                 <button
-                                    onClick={handleLogout}
-                                    className="flex items-center text-gray-700 hover:text-blue-500 transition duration-200 w-full text-left"
-                                >
-                                    <FaSignOutAlt className="mr-2" /> Logout
-                                </button>
+                  onClick={handleLogout}
+                  className="flex items-center text-gray-700 hover:text-blue-500 transition duration-200 w-full text-left">
+                  <FaSignOutAlt className="mr-2" /> Logout
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
           {showLogoutModal && (
-                <ConfirmationModal
-                    title="Confirm Logout"
-                    message="Are you sure you want to log out?"
-                    onConfirm={confirmLogout}
-                    onCancel={() => setShowLogoutModal(false)}
-                />
-            )}
+            <ConfirmationModal
+              title="Confirm Logout"
+              message="Are you sure you want to log out?"
+              onConfirm={confirmLogout}
+              onCancel={() => setShowLogoutModal(false)}
+            />
+          )}
         </div>
       </div>
     </header>
