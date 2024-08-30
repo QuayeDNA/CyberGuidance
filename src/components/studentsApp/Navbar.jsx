@@ -105,7 +105,7 @@ function Navbar() {
       id: 3,
       to: "/student/appointment",
       icon: <FaUserAlt className="mr-2" />,
-      text: "Book an Appointment",
+      text: "Appointments",
     },
     {
       id: 4,
