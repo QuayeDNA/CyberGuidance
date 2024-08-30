@@ -1,16 +1,27 @@
 import { useState, useEffect } from "react";
-import { FaBell, FaSignOutAlt, FaBars, FaUserAlt, FaHome, FaComment, FaRegNewspaper, FaCog } from "react-icons/fa";
+import {
+  FaBell,
+  FaSignOutAlt,
+  FaBars,
+  FaUserAlt,
+  FaHome,
+  FaComment,
+  FaRegNewspaper,
+  FaCog,
+} from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ConfirmationModal from "./ConfirmationModal";
-import { useAuth } from '../../components/contexts/AuthContext';
+import { useAuth } from "../../components/contexts/AuthContext";
 
 const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     // Load notifications from localStorage on component mount
-    const storedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+    const storedNotifications = JSON.parse(
+      localStorage.getItem("notifications") || "[]"
+    );
     setNotifications(storedNotifications);
 
     // Set up an interval to check for new notifications
@@ -24,35 +35,42 @@ const useNotifications = () => {
   const checkForNewNotifications = () => {
     // Simulate receiving new notifications
     const chance = Math.random();
-    if (chance < 0.3) { // 30% chance of new notification
+    if (chance < 0.3) {
+      // 30% chance of new notification
       const newNotification = {
         id: Date.now(),
-        title: 'New Notification',
+        title: "New Notification",
         message: `This is a new notification ${chance.toFixed(2)}`,
         time: new Date().toLocaleTimeString(),
         isRead: false,
       };
 
-      setNotifications(prevNotifications => {
+      setNotifications((prevNotifications) => {
         let updatedNotifications = [newNotification, ...prevNotifications];
-        
+
         // Cap the notifications at 20
         if (updatedNotifications.length > 20) {
           updatedNotifications = updatedNotifications.slice(0, 20);
         }
 
-        localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+        localStorage.setItem(
+          "notifications",
+          JSON.stringify(updatedNotifications)
+        );
         return updatedNotifications;
       });
     }
   };
 
   const markAsRead = (id) => {
-    setNotifications(prevNotifications => {
-      const updatedNotifications = prevNotifications.map(notif =>
+    setNotifications((prevNotifications) => {
+      const updatedNotifications = prevNotifications.map((notif) =>
         notif.id === id ? { ...notif, isRead: true } : notif
       );
-      localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+      localStorage.setItem(
+        "notifications",
+        JSON.stringify(updatedNotifications)
+      );
       return updatedNotifications;
     });
   };
@@ -61,10 +79,10 @@ const useNotifications = () => {
 };
 
 function Navbar() {
-
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false); 
-  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showNotificationDropdown, setShowNotificationDropdown] =
+    useState(false);
   const { notifications, markAsRead } = useNotifications();
 
   const navigate = useNavigate();
@@ -159,7 +177,7 @@ function Navbar() {
 
   const confirmLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -172,7 +190,7 @@ function Navbar() {
             className="h-12 bg-gray-700 rounded-lg p-1"
           />
           <span className="text-gray-700 text-xl font-semibold hidden lg:block">
-            Cyber-Counselling
+            E-Counselling
           </span>
         </div>
         <nav className="hidden md:flex items-center space-x-6">
@@ -195,7 +213,9 @@ function Navbar() {
         <div className="relative flex items-center space-x-6">
           <button
             className="text-gray-500 hover:text-blue-600 transition duration-200 relative"
-            onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}>
+            onClick={() =>
+              setShowNotificationDropdown(!showNotificationDropdown)
+            }>
             <FaBell className="text-lg" />
             {notifications.some((n) => !n.isRead) && (
               <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
@@ -220,11 +240,17 @@ function Navbar() {
                           notification.isRead ? "bg-gray-100" : "bg-blue-50"
                         }`}>
                         <div>
-                          <h3 className="text-md font-semibold mb-1">{notification.title}</h3>
-                          <p className="text-sm text-gray-700">{notification.message}</p>
+                          <h3 className="text-md font-semibold mb-1">
+                            {notification.title}
+                          </h3>
+                          <p className="text-sm text-gray-700">
+                            {notification.message}
+                          </p>
                         </div>
                         <div className="flex justify-between items-center">
-                          <p className="text-xs text-gray-500">{notification.time}</p>
+                          <p className="text-xs text-gray-500">
+                            {notification.time}
+                          </p>
                           <button
                             onClick={() => markAsRead(notification.id)}
                             className="text-blue-500 hover:underline text-sm">
@@ -234,7 +260,9 @@ function Navbar() {
                       </div>
                     ))
                   ) : (
-                    <p className="text-center text-gray-500">No notifications</p>
+                    <p className="text-center text-gray-500">
+                      No notifications
+                    </p>
                   )}
                 </div>
               </motion.div>
