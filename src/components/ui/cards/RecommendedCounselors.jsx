@@ -104,7 +104,7 @@ const CounselorsComponent = () => {
                     onClick={() => handleCounselorSelect(counselor._id)}
                     className="py-1 px-4 text-sm rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors inline-flex items-center"
                   >
-                    <FaUser className="mr-1" /> View Profile
+                    <FaUser className="mr-1" /> Book Appointment
                   </button>
                 </div>
               </div>
