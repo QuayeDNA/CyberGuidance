@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from "react-router-dom";
-import { FaUserCircle, FaEnvelope, FaCalendarAlt, FaExclamationTriangle, FaPhoneAlt, FaSpinner, FaExclamationCircle } from "react-icons/fa";
+import { FaUserCircle, FaEnvelope, FaCalendarAlt, FaPhoneAlt, FaSpinner, FaExclamationCircle } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { Dialog, Transition, DialogPanel, DialogTitle, TransitionChild } from "@headlessui/react";
 import { toast } from "react-toastify";
 import { useAuth } from '../../components/contexts/AuthContext';
 import { fetchUserById } from "../../axiosServices/userDataServices";
@@ -14,8 +13,6 @@ const CounselorProfile = () => {
   const { id } = useParams();
   const [counselor, setCounselor] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportReason, setReportReason] = useState("");
   const [isBookAppointmentModalOpen, setIsBookAppointmentModalOpen] = useState(false);
   const [isEmergencyBookingOpen, setIsEmergencyBookingOpen] = useState(false);
   const { userData } = useAuth();
@@ -24,7 +21,6 @@ const CounselorProfile = () => {
     fetchCounselorDetails();
   }, [id, userData?.id]);
 
-  const handleReport = () => setIsReportModalOpen(true);
   
   const fetchCounselorDetails = async () => {
     try {
@@ -46,20 +42,6 @@ const CounselorProfile = () => {
   const handleEmergencyBooking = useCallback(() => {
     setIsEmergencyBookingOpen(true);
   }, []);
-
-  const submitReport = async () => {
-    try {
-      if (!userData) throw new Error("User not authenticated.");
-      // Assume there is an endpoint to submit reports.
-      // Replace this with your actual report submission logic.
-      toast.success("Report submitted successfully.");
-      setIsReportModalOpen(false);
-      setReportReason("");
-    } catch (error) {
-      console.error("Error submitting report:", error);
-      toast.error("Failed to submit report. Please try again.");
-    }
-  };
 
   const handleAppointmentBooked = () => {
     // Handle the appointment booking success
@@ -92,7 +74,6 @@ const CounselorProfile = () => {
     >
       <CounselorProfileCard
         counselor={counselor}
-        handleReport={handleReport}
         handleBookAppointment={handleBookAppointment}
         handleEmergencyBooking={handleEmergencyBooking}
       />
@@ -111,13 +92,6 @@ const CounselorProfile = () => {
         onClose={() => setIsEmergencyBookingOpen(false)}
         onBookingInitiated={() => {/* Handle emergency booking initiated */}}
       />
-      <ReportModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        onSubmit={submitReport}
-        reportReason={reportReason}
-        setReportReason={setReportReason}
-      />
     </motion.div>
   );
 };
@@ -129,7 +103,7 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-const CounselorProfileCard = ({ counselor, handleReport, handleBookAppointment, handleEmergencyBooking }) => (
+const CounselorProfileCard = ({ counselor, handleBookAppointment, handleEmergencyBooking }) => (
   <div className="bg-white shadow-xl rounded-lg overflow-hidden">
     <div className="p-8">
       <div className="flex items-center justify-center mb-6">
@@ -158,13 +132,6 @@ const CounselorProfileCard = ({ counselor, handleReport, handleBookAppointment, 
         >
           <FaExclamationCircle className="mr-2" />
           Emergency Booking
-        </button>
-        <button
-          onClick={handleReport}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 flex items-center"
-        >
-          <FaExclamationTriangle className="mr-2" />
-          Report
         </button>
       </div>
       <div className="text-gray-600 text-center space-y-4">
@@ -195,84 +162,6 @@ CounselorProfileCard.propTypes = {
   handleEmergencyBooking: PropTypes.func.isRequired,
 };
 
-const ReportModal = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  reportReason,
-  setReportReason,
-}) => (
-  <Transition appear show={isOpen} as={Fragment}>
-    <Dialog as="div" className="relative z-10" onClose={onClose}>
-      <TransitionChild
-        as={Fragment}
-        enter="ease-out duration-300"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="ease-in duration-200"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
-        <div className="fixed inset-0 bg-black bg-opacity-25" />
-      </TransitionChild>
 
-      <div className="fixed inset-0 overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4 text-center">
-          <TransitionChild
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle
-                as="h3"
-                className="text-lg font-medium leading-6 text-gray-900"
-              >
-                Report Counselor
-              </DialogTitle>
-              <div className="mt-2">
-                <textarea
-                  className="w-full h-32 p-2 border rounded mb-4"
-                  placeholder="Please provide details about your concern..."
-                  value={reportReason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                ></textarea>
-              </div>
-
-              <div className="mt-4 flex justify-end space-x-4">
-                <button
-                  type="button"
-                  className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
-                  onClick={onClose}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-                  onClick={onSubmit}
-                >
-                  Submit
-                </button>
-              </div>
-            </DialogPanel>
-          </TransitionChild>
-        </div>
-      </div>
-    </Dialog>
-  </Transition>
-);
-
-ReportModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-  reportReason: PropTypes.string.isRequired,
-  setReportReason: PropTypes.func.isRequired,
-}
 
 export default CounselorProfile;

@@ -46,6 +46,7 @@ const Users = lazy(() => import("./pages/admin/UserManagement"));
 const AnalyticsReports = lazy(() => import("./pages/admin/AnalyticsReports"));
 const Notifications = lazy(() => import("./pages/admin/NotificationsCenter"));
 const Appointments = lazy(() => import("./pages/admin/AppointmentManagement"));
+const Reports = lazy(() => import("./pages/admin/Reports"));
 
 function App() {
   return (
@@ -144,6 +145,7 @@ function App() {
                   <Route path="overview" element={<Overview />} />
                   <Route path="users" element={<Users />} />
                   <Route path="appointments" element={<Appointments />} />
+                  <Route path='reports' element={<Reports />} />
                   <Route path="analytics" element={<AnalyticsReports />} />
                   <Route path="settings" element={<SystemSettings />} />
                   <Route path="notifications" element={<Notifications />} />

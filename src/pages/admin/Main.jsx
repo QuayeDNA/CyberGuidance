@@ -10,6 +10,7 @@ import {
   FaSignOutAlt,
   FaBars,
   FaTimes,
+  FaFileAlt,
 } from "react-icons/fa";
 import { useAuth } from "../../components/contexts/AuthContext";
 import PropTypes from "prop-types";
@@ -81,6 +82,7 @@ const AdminDashboard = () => {
     { path: "/admin/overview", icon: FaTachometerAlt, label: "Overview" },
     { path: "/admin/users", icon: FaUsers, label: "Users" },
     { path: "/admin/appointments", icon: FaCalendarAlt, label: "Appointments" },
+    {path: "/admin/reports", icon: FaFileAlt, label: "Reports"},
     { path: "/admin/analytics", icon: FaChartBar, label: "Analytics" },
     { path: "/admin/settings", icon: FaCog, label: "Settings" },
     { path: "/admin/notifications", icon: FaBell, label: "Notifications" },
