@@ -2,9 +2,10 @@ import { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from '@headlessui/react';
 import { FaExclamationCircle, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 import PropTypes from 'prop-types';
-import { useAuth } from '../../components/contexts/AuthContext';
+import { getAllReports, markReportUnderReview, resolveReport } from '../../axiosServices/reportApi';
+import ReassignModal from './components/ReassignModal';
 
-const ReportActionModal = ({ isOpen, closeModal, report, onAction }) => (
+const ReportActionModal = ({ isOpen, closeModal, report, onAction, isLoading }) => (
   <Transition appear show={isOpen} as={Fragment}>
     <Dialog as="div" className="relative z-10" onClose={closeModal}>
       <TransitionChild
@@ -47,23 +48,20 @@ const ReportActionModal = ({ isOpen, closeModal, report, onAction }) => (
                 <button
                   type="button"
                   className="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                  onClick={() => onAction(report.id, 'investigate')}
+                  onClick={() => onAction(report.reportId, 'underReview')}
+                  disabled={isLoading}
                 >
-                  Investigate Further
+                  {isLoading ? <FaSpinner className="animate-spin mr-2" /> : null}
+                  Mark as Under Review
                 </button>
                 <button
                   type="button"
                   className="w-full inline-flex justify-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-900 hover:bg-green-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
-                  onClick={() => onAction(report.id, 'resolve')}
+                  onClick={() => onAction(report.reportId, 'resolved')}
+                  disabled={isLoading}
                 >
+                  {isLoading ? <FaSpinner className="animate-spin mr-2" /> : null}
                   Mark as Resolved
-                </button>
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-                  onClick={() => onAction(report.id, 'dismiss')}
-                >
-                  Dismiss Report
                 </button>
               </div>
             </DialogPanel>
@@ -79,17 +77,19 @@ ReportActionModal.propTypes = {
   closeModal: PropTypes.func.isRequired,
   report: PropTypes.object.isRequired,
   onAction: PropTypes.func.isRequired,
+  isLoading: PropTypes.bool.isRequired,
 };
 
 const AdminReportsPage = () => {
   const [reports, setReports] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [reassignLoading, setReassignLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-
-  const { token } = useAuth();
 
   useEffect(() => {
     fetchReports();
@@ -99,17 +99,7 @@ const AdminReportsPage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('https://your-api-endpoint.com/admin/reports', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch reports');
-      }
-
-      const data = await response.json();
+      const data = await getAllReports();
       setReports(data.reports);
     } catch (err) {
       setError('An error occurred while fetching reports. Please try again later.');
@@ -120,25 +110,27 @@ const AdminReportsPage = () => {
   };
 
   const handleAction = async (reportId, action) => {
+    setActionLoading(true);
     try {
-      const response = await fetch(`https://your-api-endpoint.com/admin/reports/${reportId}/${action}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      let response;
+      if (action === 'underReview') {
+        response = await markReportUnderReview(reportId, 'Marked as under review');
+      } else if (action === 'resolved') {
+        response = await resolveReport(reportId, 'Marked as resolved');
+      }
 
-      if (!response.ok) {
+      if (!response) {
         throw new Error('Failed to perform action');
       }
 
-      setSuccessMessage(`Report ${action === 'investigate' ? 'marked for investigation' : action === 'resolve' ? 'resolved' : 'dismissed'} successfully`);
+      setSuccessMessage(`Report ${action === 'underReview' ? 'marked as under review' : 'resolved'} successfully`);
       setIsModalOpen(false);
       fetchReports(); // Refresh the reports list
     } catch (err) {
       setError(`An error occurred while performing the action. Please try again.`);
       console.error('Error performing action:', err);
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -167,7 +159,7 @@ const AdminReportsPage = () => {
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
           <span className="block sm:inline">{successMessage}</span>
           <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
-          <FaCheckCircle className='h-6 w-6' />
+            <FaCheckCircle className='h-6 w-6' />
           </span>
         </div>
       )}
@@ -175,16 +167,16 @@ const AdminReportsPage = () => {
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-gray-200">
           {reports.map((report) => (
-            <li key={report.id}>
+            <li key={report.reportId}>
               <div className="px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-indigo-600 truncate">
-                    Report #{report.id}
+                    Report #{report.reportId}
                   </p>
                   <div className="ml-2 flex-shrink-0 flex">
                     <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      report.status === 'investigating' ? 'bg-blue-100 text-blue-800' :
+                      report.status === 'underReview' ? 'bg-blue-100 text-blue-800' :
                       report.status === 'resolved' ? 'bg-green-100 text-green-800' :
                       'bg-red-100 text-red-800'
                     }`}>
@@ -196,7 +188,7 @@ const AdminReportsPage = () => {
                   <div className="sm:flex">
                     <p className="flex items-center text-sm text-gray-500">
                       <FaExclamationCircle className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" aria-hidden="true" />
-                      {report.reason}
+                      {report.appointmentReason}
                     </p>
                   </div>
                   <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
@@ -204,7 +196,7 @@ const AdminReportsPage = () => {
                       Reported on {new Date(report.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                <div className="mt-4">
+                <div className="mt-4 flex space-x-2">
                   <button
                     onClick={() => {
                       setSelectedReport(report);
@@ -213,6 +205,16 @@ const AdminReportsPage = () => {
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Take Action
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedReport(report);
+                      setIsReassignModalOpen(true);
+                    }}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                    disabled={report.status === 'resolved'}
+                  >
+                    Reassign
                   </button>
                 </div>
               </div>
@@ -227,6 +229,19 @@ const AdminReportsPage = () => {
         closeModal={() => setIsModalOpen(false)}
         report={selectedReport}
         onAction={handleAction}
+        isLoading={actionLoading}
+      />
+
+      <ReassignModal
+        isOpen={isReassignModalOpen}
+        closeModal={() => setIsReassignModalOpen(false)}
+        report={selectedReport}
+        isLoading={reassignLoading}
+        onReassign={(appointmentId, counselorId) => {
+          console.log(`Reassigned appointment ${appointmentId} to counselor ${counselorId}`);
+          setReassignLoading(false);
+          fetchReports(); // Refresh the reports list
+        }}
       />
     </div>
   );

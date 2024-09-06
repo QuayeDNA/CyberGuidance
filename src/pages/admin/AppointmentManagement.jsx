@@ -1,217 +1,297 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FaCalendarAlt, FaClock, FaUser, FaMapMarkerAlt, FaPhoneAlt, FaVideo, FaComments, FaUserFriends, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
+import { useEffect, useState, Fragment } from 'react';
+import { getAllAppointmentsAdmin, getTodayUpcomingAppointmentsAdmin } from '../../axiosServices/reportApi'; // Import API calls
+import { FaCheckCircle, FaClock, FaCalendarAlt, FaRegIdBadge } from 'react-icons/fa'; // React Icons
+import { Dialog, Transition } from '@headlessui/react'; // Headless UI for dialog
+import moment from 'moment';
 
 const AppointmentManagement = () => {
-  const [appointments, setAppointments] = useState([]);
-  const [filteredAppointments, setFilteredAppointments] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterMode, setFilterMode] = useState('all');
-  const [filterDate, setFilterDate] = useState('');
-  const [stats, setStats] = useState({ total: 0, upcoming: 0, completed: 0, cancelled: 0 });
+    const [appointments, setAppointments] = useState([]);
+    const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+    const [stats, setStats] = useState({
+        totalAppointments: 0,
+        upcomingAppointments: 0,
+        completedAppointments: 0,
+        cancelledAppointments: 0,
+    });
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  useEffect(() => {
-    // Simulating API call to fetch appointments
-    const fetchAppointments = async () => {
-      // In a real application, you would fetch this data from your backend
-      const data = [
-        { id: 1, student: 'Alice Johnson', counselor: 'Dr. Smith', date: '2024-07-30', time: '10:00 AM', venue: 'Room 101', mode: 'in-person', status: 'upcoming' },
-        { id: 2, student: 'Bob Williams', counselor: 'Dr. Brown', date: '2024-07-31', time: '2:00 PM', venue: 'Zoom', mode: 'video', status: 'upcoming' },
-        { id: 3, student: 'Charlie Davis', counselor: 'Dr. White', date: '2024-07-29', time: '11:30 AM', venue: 'Phone', mode: 'voice', status: 'completed' },
-        { id: 4, student: 'Diana Miller', counselor: 'Dr. Green', date: '2024-08-01', time: '3:00 PM', venue: 'WhatsApp', mode: 'text', status: 'upcoming' },
-      ];
-      setAppointments(data);
-      setFilteredAppointments(data);
-      updateStats(data);
+    useEffect(() => {
+        const fetchAppointments = async () => {
+            try {
+                const data = await getAllAppointmentsAdmin();
+                setAppointments(data.appointments);
+                setStats(data.stats); // Get the counts from the response
+            } catch (error) {
+                console.error('Error fetching appointments:', error);
+            }
+        };
+
+        const fetchUpcomingAppointments = async () => {
+            try {
+                const data = await getTodayUpcomingAppointmentsAdmin();
+                setUpcomingAppointments(data.appointments);
+            } catch (error) {
+                console.error('Error fetching upcoming appointments:', error);
+            }
+        };
+
+        fetchAppointments();
+        fetchUpcomingAppointments();
+    }, []);
+
+    const getAvatarUrl = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+
+    const openDialog = (appointment) => {
+        setSelectedAppointment(appointment);
+        setIsOpen(true);
     };
 
-    fetchAppointments();
-  }, []);
+    const closeDialog = () => {
+        setIsOpen(false);
+        setSelectedAppointment(null);
+    };
 
-  const updateStats = (data) => {
-    const stats = data.reduce((acc, appointment) => {
-      acc.total++;
-      acc[appointment.status]++;
-      return acc;
-    }, { total: 0, upcoming: 0, completed: 0, cancelled: 0 });
-    setStats(stats);
-  };
+    return (
+        <div className="p-6">
+            {/* Analytics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white shadow-lg rounded-lg p-4">
+                    <div className="flex items-center">
+                        <FaCheckCircle className="w-8 h-8 text-green-500 mr-4" />
+                        <div>
+                            <h2 className="text-lg font-semibold">Total Appointments</h2>
+                            <p className="text-gray-500">{stats.totalAppointments}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white shadow-lg rounded-lg p-4">
+                    <div className="flex items-center">
+                        <FaClock className="w-8 h-8 text-blue-500 mr-4" />
+                        <div>
+                            <h2 className="text-lg font-semibold">Upcoming</h2>
+                            <p className="text-gray-500">{stats.upcomingAppointments}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white shadow-lg rounded-lg p-4">
+                    <div className="flex items-center">
+                        <FaRegIdBadge className="w-8 h-8 text-green-500 mr-4" />
+                        <div>
+                            <h2 className="text-lg font-semibold">Completed</h2>
+                            <p className="text-gray-500">{stats.completedAppointments}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white shadow-lg rounded-lg p-4">
+                    <div className="flex items-center">
+                        <FaCalendarAlt className="w-8 h-8 text-red-500 mr-4" />
+                        <div>
+                            <h2 className="text-lg font-semibold">Cancelled</h2>
+                            <p className="text-gray-500">{stats.cancelledAppointments}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-  const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
-    setSearchTerm(term);
-    filterAppointments(term, filterMode, filterDate);
-  };
+            {/* Upcoming Appointments */}
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
+                <h2 className="text-xl font-semibold p-4">Today&apos;s Upcoming Appointments</h2>
+                <table className="min-w-full leading-normal">
+                    <thead>
+                        <tr>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student</th>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Counselor</th>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {upcomingAppointments.map((appointment) => (
+                            <tr key={appointment.appointmentId} className="hover:bg-gray-50 transition duration-300 ease-in-out">
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <div className="flex items-center">
+                                        <img
+                                            className="w-10 h-10 rounded-full object-cover"
+                                            src={appointment.student.profilePicture || getAvatarUrl(appointment.student.name)}
+                                            alt={appointment.student.name}
+                                        />
+                                        <div className="ml-3">
+                                            <p className="text-gray-900 whitespace-no-wrap">{appointment.student.name}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <div className="flex items-center">
+                                        <img
+                                            className="w-10 h-10 rounded-full object-cover"
+                                            src={appointment.counselor.profilePicture || getAvatarUrl(appointment.counselor.name)}
+                                            alt={appointment.counselor.name}
+                                        />
+                                        <div className="ml-3">
+                                            <p className="text-gray-900 whitespace-no-wrap">{appointment.counselor.name}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <p className="text-gray-900 whitespace-no-wrap">{moment(appointment.date).format('MMM DD, YYYY')}</p>
+                                    <p className="text-gray-600 whitespace-no-wrap">{appointment.timeSlot}</p>
+                                </td>
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <span
+                                        className={`px-3 py-1 font-semibold leading-tight rounded-full
+                                            ${appointment.status === 'completed' ? 'bg-green-200 text-green-800' : ''}
+                                            ${appointment.status === 'pending' ? 'bg-yellow-200 text-yellow-800' : ''}
+                                            ${appointment.status === 'in-progress' ? 'bg-blue-200 text-blue-800' : ''}`}
+                                    >
+                                        {appointment.status}
+                                    </span>
+                                </td>
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <button
+                                        className="text-indigo-600 hover:text-indigo-900"
+                                        onClick={() => openDialog(appointment)}
+                                    >
+                                        Details
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
-  const handleFilterMode = (mode) => {
-    setFilterMode(mode);
-    filterAppointments(searchTerm, mode, filterDate);
-  };
+            {/* All Appointments */}
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+                <h2 className="text-xl font-semibold p-4">All Appointments</h2>
+                <table className="min-w-full leading-normal">
+                    <thead>
+                        <tr>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student</th>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Counselor</th>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th className="px-5 py-3 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {appointments.map((appointment) => (
+                            <tr key={appointment.appointmentId} className="hover:bg-gray-50 transition duration-300 ease-in-out">
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <div className="flex items-center">
+                                        <img
+                                            className="w-10 h-10 rounded-full object-cover"
+                                            src={appointment.student.profilePicture || getAvatarUrl(appointment.student.name)}
+                                            alt={appointment.student.name}
+                                        />
+                                        <div className="ml-3">
+                                            <p className="text-gray-900 whitespace-no-wrap">{appointment.student.name}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <div className="flex items-center">
+                                        <img
+                                            className="w-10 h-10 rounded-full object-cover"
+                                            src={appointment.counselor.profilePicture || getAvatarUrl(appointment.counselor.name)}
+                                            alt={appointment.counselor.name}
+                                        />
+                                        <div className="ml-3">
+                                            <p className="text-gray-900 whitespace-no-wrap">{appointment.counselor.name}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <p className="text-gray-900 whitespace-no-wrap">{moment(appointment.date).format('MMM DD, YYYY')}</p>
+                                    <p className="text-gray-600 whitespace-no-wrap">{appointment.timeSlot}</p>
+                                </td>
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <span
+                                        className={`px-3 py-1 font-semibold leading-tight rounded-full
+                                            ${appointment.status === 'completed' ? 'bg-green-200 text-green-800' : ''}
+                                            ${appointment.status === 'pending' ? 'bg-yellow-200 text-yellow-800' : ''}
+                                            ${appointment.status === 'in-progress' ? 'bg-blue-200 text-blue-800' : ''}`}
+                                    >
+                                        {appointment.status}
+                                    </span>
+                                </td>
+                                <td className="px-5 py-5 border-b border-gray-200">
+                                    <button
+                                        className="text-indigo-600 hover:text-indigo-900"
+                                        onClick={() => openDialog(appointment)}
+                                    >
+                                        Details
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
-  const handleFilterDate = (e) => {
-    const date = e.target.value;
-    setFilterDate(date);
-    filterAppointments(searchTerm, filterMode, date);
-  };
+            {/* Appointment Details Dialog */}
+            <Transition appear show={isOpen} as={Fragment}>
+                <Dialog as="div" className="fixed inset-0 z-10 overflow-y-auto" onClose={closeDialog}>
+                    <div className="min-h-screen px-4 text-center">
+                        <Transition.Child
+                            as={Fragment}
+                            enter="ease-out duration-300"
+                            enterFrom="opacity-0"
+                            enterTo="opacity-100"
+                            leave="ease-in duration-200"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                        >
+                            <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+                        </Transition.Child>
 
-  const filterAppointments = (term, mode, date) => {
-    let filtered = appointments.filter(appointment => 
-      (appointment.student.toLowerCase().includes(term) || 
-       appointment.counselor.toLowerCase().includes(term)) &&
-      (mode === 'all' || appointment.mode === mode) &&
-      (date === '' || appointment.date === date)
-    );
-    setFilteredAppointments(filtered);
-  };
+                        {/* This element is to trick the browser into centering the modal contents. */}
+                        <span className="inline-block h-screen align-middle" aria-hidden="true">
+                            &#8203;
+                        </span>
+                        <Transition.Child
+                            as={Fragment}
+                            enter="ease-out duration-300"
+                            enterFrom="opacity-0 scale-95"
+                            enterTo="opacity-100 scale-100"
+                            leave="ease-in duration-200"
+                            leaveFrom="opacity-100 scale-100"
+                            leaveTo="opacity-0 scale-95"
+                        >
+                            <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
+                                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                                    Appointment Details
+                                </Dialog.Title>
+                                <div className="mt-2">
+                                    {selectedAppointment && (
+                                        <div>
+                                            <p><strong>Student:</strong> {selectedAppointment.student.name}</p>
+                                            <p><strong>Counselor:</strong> {selectedAppointment.counselor.name}</p>
+                                            <p><strong>Date:</strong> {moment(selectedAppointment.date).format('MMM DD, YYYY')}</p>
+                                            <p><strong>Time Slot:</strong> {selectedAppointment.timeSlot}</p>
+                                            <p><strong>Room ID:</strong> {selectedAppointment.roomId}</p>
+                                            <p><strong>Status:</strong> {selectedAppointment.status}</p>
+                                        </div>
+                                    )}
+                                </div>
 
-  const handleEditAppointment = (id) => {
-    // Implement edit functionality
-    console.log('Edit appointment', id);
-  };
-
-  const handleCancelAppointment = (id) => {
-    if (window.confirm('Are you sure you want to cancel this appointment?')) {
-      const updatedAppointments = appointments.map(appointment => 
-        appointment.id === id ? { ...appointment, status: 'cancelled' } : appointment
-      );
-      setAppointments(updatedAppointments);
-      setFilteredAppointments(updatedAppointments);
-      updateStats(updatedAppointments);
-    }
-  };
-
-  const getModeIcon = (mode) => {
-    switch (mode) {
-      case 'in-person': return <FaUserFriends className="text-blue-500" />;
-      case 'video': return <FaVideo className="text-green-500" />;
-      case 'voice': return <FaPhoneAlt className="text-yellow-500" />;
-      case 'text': return <FaComments className="text-purple-500" />;
-      default: return null;
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="p-6"
-    >
-      <h2 className="text-2xl font-bold mb-6">Appointment Management</h2>
-      
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {Object.entries(stats).map(([key, value]) => (
-          <div key={key} className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold capitalize">{key}</h3>
-            <p className="text-2xl font-bold">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="mb-6 flex flex-wrap items-center gap-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search appointments..."
-            className="pl-10 pr-4 py-2 border rounded-lg"
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-          <FaSearch className="absolute left-3 top-3 text-gray-400" />
+                                <div className="mt-4">
+                                    <button
+                                        type="button"
+                                        className="inline-flex justify-center px-4 py-2 text-sm font-medium text-blue-900 bg-blue-100 border border-transparent rounded-md hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                                        onClick={closeDialog}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </Transition.Child>
+                    </div>
+                </Dialog>
+            </Transition>
         </div>
-        <select
-          className="p-2 border rounded-lg"
-          value={filterMode}
-          onChange={(e) => handleFilterMode(e.target.value)}
-        >
-          <option value="all">All Modes</option>
-          <option value="in-person">In-Person</option>
-          <option value="video">Video Call</option>
-          <option value="voice">Voice Call</option>
-          <option value="text">Text Message</option>
-        </select>
-        <input
-          type="date"
-          className="p-2 border rounded-lg"
-          value={filterDate}
-          onChange={handleFilterDate}
-        />
-      </div>
-
-      {/* Appointments Table */}
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Counselor</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Venue</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAppointments.map((appointment) => (
-              <tr key={appointment.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <FaUser className="text-gray-400 mr-2" />
-                    {appointment.student}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <FaUser className="text-gray-400 mr-2" />
-                    {appointment.counselor}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <FaCalendarAlt className="text-gray-400 mr-2" />
-                    {appointment.date}
-                    <FaClock className="text-gray-400 ml-4 mr-2" />
-                    {appointment.time}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <FaMapMarkerAlt className="text-gray-400 mr-2" />
-                    {appointment.venue}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    {getModeIcon(appointment.mode)}
-                    <span className="ml-2 capitalize">{appointment.mode}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${appointment.status === 'upcoming' ? 'bg-green-100 text-green-800' : 
-                      appointment.status === 'completed' ? 'bg-blue-100 text-blue-800' : 
-                      'bg-red-100 text-red-800'}`}>
-                    {appointment.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <button onClick={() => handleEditAppointment(appointment.id)} className="text-indigo-600 hover:text-indigo-900 mr-4">
-                    <FaEdit />
-                  </button>
-                  <button onClick={() => handleCancelAppointment(appointment.id)} className="text-red-600 hover:text-red-900">
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </motion.div>
-  );
+    );
 };
 
 export default AppointmentManagement;

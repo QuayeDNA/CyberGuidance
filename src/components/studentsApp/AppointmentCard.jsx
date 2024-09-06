@@ -2,14 +2,16 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import { FaFlag } from 'react-icons/fa';
-import { Tooltip } from 'react-tooltip'
+import { Tooltip } from 'react-tooltip';
 import ReportModal from './ReportCounsellor';
 import ConfirmReportModal from './ConfirmReportModal';
+import { reportCounselor } from '../../axiosServices/reportApi';
 
-const AppointmentCard = ({ appointment, studentId }) => {
+const AppointmentCard = ({ appointment }) => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const [message, setMessage] = useState('');
 
   const handleOpenReportModal = () => setIsReportModalOpen(true);
   const handleCloseReportModal = () => {
@@ -29,32 +31,32 @@ const AppointmentCard = ({ appointment, studentId }) => {
 
   const handleSubmitReport = async () => {
     try {
-      const response = await fetch('https://your-api-endpoint.com/report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add any necessary authentication headers
-        },
-        body: JSON.stringify({
-          studentId,
-          counselorId: appointment.counselor.id,
-          appointmentReason: appointment.reason,
-          reportDetails: reportReason,
-        }),
+      console.log("Submitting report with the following data:");
+      console.log({
+        appointmentId: appointment.id, // pass appointment id
+        reportDetails: reportReason, // reason for the report
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit report');
+  
+      // Send only appointment ID and report details
+      const response = await reportCounselor(appointment.id, {
+        details: reportReason, // pass report details
+      });
+  
+      console.log("Response from server:", response.data);
+  
+      if (response.status === 201 && response.data.message === 'Report submitted successfully.') {
+        setMessage('Report submitted successfully');
+      } else {
+        setMessage('Failed to submit report');
       }
-
-      // Handle successful submission
-      console.log('Report submitted successfully');
+  
       handleCloseConfirmModal();
     } catch (error) {
-      console.error('Error submitting report:', error);
-      // Handle error (e.g., show error message to user)
+      console.error("Error submitting report:", error);
+      setMessage('Failed to submit report');
     }
   };
+  
 
   return (
     <div className="bg-white shadow-md rounded-lg p-4 flex items-start space-x-4 hover:shadow-lg transition-shadow duration-300">
@@ -101,13 +103,13 @@ const AppointmentCard = ({ appointment, studentId }) => {
           reportDetails={reportReason}
         />
       </div>
+      {message && <p className="text-sm text-red-500 mt-2">{message}</p>}
     </div>
   );
 };
 
 AppointmentCard.propTypes = {
   appointment: PropTypes.object.isRequired,
-  studentId: PropTypes.string.isRequired,
 };
 
 export default AppointmentCard;

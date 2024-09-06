@@ -1,31 +1,45 @@
-
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaUsers, FaCalendarAlt, FaChartBar, FaBell, FaUserMd, FaClock, FaStar, FaExclamationTriangle } from 'react-icons/fa';
+import { getDashboardCounts, getTodayUpcomingAppointmentsAdmin } from '../../axiosServices/reportApi';
 
 const DashboardOverview = () => {
-  const stats = [
-    { title: 'Total Users', value: 1500, icon: FaUsers, color: 'text-blue-600' },
-    { title: 'Active Counselors', value: 25, icon: FaUserMd, color: 'text-green-600' },
-    { title: 'Appointments Today', value: 50, icon: FaCalendarAlt, color: 'text-yellow-600' },
-    { title: 'Active Sessions', value: 15, icon: FaChartBar, color: 'text-purple-600' },
-    { title: 'Avg. Session Duration', value: '45 min', icon: FaClock, color: 'text-indigo-600' },
-    { title: 'User Satisfaction', value: '4.8/5', icon: FaStar, color: 'text-orange-600' },
-    { title: 'Unresolved Issues', value: 5, icon: FaExclamationTriangle, color: 'text-red-600' },
-    { title: 'New Notifications', value: 10, icon: FaBell, color: 'text-pink-600' },
-  ];
+  const [stats, setStats] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
 
-  const recentActivities = [
-    { user: 'John Doe', action: 'Completed a session', time: '10 minutes ago' },
-    { user: 'Jane Smith', action: 'Booked an appointment', time: '1 hour ago' },
-    { user: 'Dr. Williams', action: 'Updated availability', time: '2 hours ago' },
-    { user: 'Alice Johnson', action: 'Left a review', time: '3 hours ago' },
-  ];
+  useEffect(() => {
+    const fetchDashboardCounts = async () => {
+      try {
+        const data = await getDashboardCounts();
+        const overviewCounts = data.overviewCounts;
+        setStats([
+          { title: 'Total Users', value: overviewCounts.totalUsers, icon: FaUsers, color: 'text-blue-600' },
+          { title: 'Active Counselors', value: overviewCounts.activeCounselors, icon: FaUserMd, color: 'text-green-600' },
+          { title: 'Appointments Today', value: overviewCounts.todayAppointments, icon: FaCalendarAlt, color: 'text-yellow-600' },
+          { title: 'Active Sessions', value: overviewCounts.activeAppointments, icon: FaChartBar, color: 'text-purple-600' },
+          { title: 'Avg. Session Duration', value: `${overviewCounts.averageAppointmentDuration} min`, icon: FaClock, color: 'text-indigo-600' },
+          { title: 'User Satisfaction', value: `${overviewCounts.averageUserSatisfaction}/5`, icon: FaStar, color: 'text-orange-600' },
+          { title: 'Unresolved Issues', value: overviewCounts.unresolvedIssues, icon: FaExclamationTriangle, color: 'text-red-600' },
+          { title: 'New Notifications', value: 10, icon: FaBell, color: 'text-pink-600' }, // Assuming static value for notifications
+        ]);
+      } catch (error) {
+        console.error('Error fetching dashboard counts:', error);
+      }
+    };
 
-  const upcomingAppointments = [
-    { counselor: 'Dr. Brown', client: 'Mike Ross', time: '2:00 PM' },
-    { counselor: 'Dr. Green', client: 'Rachel Zane', time: '3:30 PM' },
-    { counselor: 'Dr. White', client: 'Harvey Specter', time: '5:00 PM' },
-  ];
+    const fetchUpcomingAppointments = async () => {
+      try {
+        const data = await getTodayUpcomingAppointmentsAdmin();
+        setUpcomingAppointments(data.appointments);
+      } catch (error) {
+        console.error('Error fetching upcoming appointments:', error);
+      }
+    };
+
+    fetchDashboardCounts();
+    fetchUpcomingAppointments();
+  }, []);
 
   return (
     <motion.div
@@ -87,15 +101,19 @@ const DashboardOverview = () => {
         >
           <h3 className="text-xl font-semibold mb-4">Upcoming Appointments</h3>
           <ul className="space-y-3">
-            {upcomingAppointments.map((appointment, index) => (
-              <li key={index} className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">{appointment.counselor}</p>
-                  <p className="text-sm text-gray-500">with {appointment.client}</p>
-                </div>
-                <span className="text-sm font-medium text-indigo-600">{appointment.time}</span>
-              </li>
-            ))}
+            {upcomingAppointments.length > 0 ? (
+              upcomingAppointments.map((appointment, index) => (
+                <li key={index} className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">{appointment.student.name}</p>
+                    <p className="text-sm text-gray-500">with {appointment.counselor.name}</p>
+                  </div>
+                  <span className="text-sm font-medium text-indigo-600">{appointment.timeSlot}</span>
+                </li>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No appointments today.</p>
+            )}
           </ul>
         </motion.div>
       </div>
