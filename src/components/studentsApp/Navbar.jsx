@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaBell,
   FaSignOutAlt,
@@ -121,46 +121,29 @@ function Navbar() {
     },
   ];
 
+  const menuDropdownRef = useRef(null);
+  const notificationDropdownRef = useRef(null);
+
   useEffect(() => {
-    // Simulating fetching notifications from an API
-    const fetchNotifications = async () => {
-      // Replace this with actual API call
-      const response = await new Promise((resolve) =>
-        setTimeout(
-          () =>
-            resolve([
-              {
-                id: 1,
-                title: "New Appointment",
-                message: "You have a new appointment scheduled for tomorrow.",
-                time: "2 hours ago",
-                link: "/appointments",
-                isRead: false,
-              },
-              {
-                id: 2,
-                title: "Counseling Session",
-                message: "Your counseling session has been confirmed.",
-                time: "4 hours ago",
-                link: "/sessions",
-                isRead: true,
-              },
-              {
-                id: 3,
-                title: "New Message",
-                message: "You received a new message from your counselor.",
-                time: "6 hours ago",
-                link: "/messages",
-                isRead: false,
-              },
-            ]),
-          1000
-        )
-      );
-      notifications(response);
+    const handleClickOutside = (event) => {
+      if (
+        menuDropdownRef.current &&
+        !menuDropdownRef.current.contains(event.target)
+      ) {
+        setShowMenuDropdown(false);
+      }
+      if (
+        notificationDropdownRef.current &&
+        !notificationDropdownRef.current.contains(event.target)
+      ) {
+        setShowNotificationDropdown(false);
+      }
     };
 
-    fetchNotifications();
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const toggleMenuDropdown = () => {
@@ -168,9 +151,15 @@ function Navbar() {
     setShowNotificationDropdown(false);
   };
 
+  const toggleNotificationDropdown = () => {
+    setShowNotificationDropdown(!showNotificationDropdown);
+    setShowMenuDropdown(false);
+  };
+
   const handleSettingsClick = () => {
     navigate("/student/user");
   };
+
   const handleLogout = () => {
     setShowLogoutModal(true); // Show the logout confirmation modal
   };
@@ -213,9 +202,7 @@ function Navbar() {
         <div className="relative flex items-center space-x-6">
           <button
             className="text-gray-500 hover:text-blue-600 transition duration-200 relative"
-            onClick={() =>
-              setShowNotificationDropdown(!showNotificationDropdown)
-            }>
+            onClick={toggleNotificationDropdown}>
             <FaBell className="text-lg" />
             {notifications.some((n) => !n.isRead) && (
               <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
@@ -226,6 +213,7 @@ function Navbar() {
           <AnimatePresence>
             {showNotificationDropdown && (
               <motion.div
+                ref={notificationDropdownRef}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -276,6 +264,7 @@ function Navbar() {
           <AnimatePresence>
             {showMenuDropdown && (
               <motion.div
+                ref={menuDropdownRef}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}

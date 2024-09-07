@@ -12,6 +12,7 @@ import {
   requestPasswordReset,
   resetPassword,
 } from "../axiosServices/userAccountServices";
+import bgImage from "../assets/Counselling-2.jpg";
 
 const Login = memo(function LoginComponent() {
   const navigate = useNavigate();
@@ -200,11 +201,11 @@ const Login = memo(function LoginComponent() {
     <div className="flex flex-col min-h-screen">
       <div className="relative flex-grow flex items-center justify-center">
         <div className="absolute inset-0">
-          {/* <img
+          <img
             src={bgImage}
             alt="Background"
             className="w-full h-full object-cover"
-          /> */}
+          />
           <div className="absolute inset-0 bg-black opacity-50"></div>
         </div>
         <div className="relative z-10 login-container">

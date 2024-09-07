@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   FaTachometerAlt,
@@ -14,6 +14,7 @@ import {
 } from "react-icons/fa";
 import { useAuth } from "../../components/contexts/AuthContext";
 import PropTypes from "prop-types";
+import { Tooltip } from "react-tooltip";
 
 // Confirmation Modal Component
 const ConfirmationModal = ({ isOpen, onConfirm, onCancel }) => {
@@ -50,9 +51,10 @@ ConfirmationModal.propTypes = {
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const sidebarRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, currentUser } = useAuth();
 
   const handleLogout = () => {
     setIsModalOpen(true);
@@ -78,21 +80,49 @@ const AdminDashboard = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleClickOutside = (event) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isSidebarOpen]);
+
   const navItems = [
     { path: "/admin/overview", icon: FaTachometerAlt, label: "Overview" },
     { path: "/admin/users", icon: FaUsers, label: "Users" },
     { path: "/admin/appointments", icon: FaCalendarAlt, label: "Appointments" },
-    {path: "/admin/reports", icon: FaFileAlt, label: "Reports"},
+    { path: "/admin/reports", icon: FaFileAlt, label: "Reports" },
     { path: "/admin/analytics", icon: FaChartBar, label: "Analytics" },
     { path: "/admin/settings", icon: FaCog, label: "Settings" },
     { path: "/admin/notifications", icon: FaBell, label: "Notifications" },
   ];
 
+  const getRandomBadge = () => {
+    const colors = ["bg-red-500", "bg-green-500", "bg-blue-500", "bg-yellow-500", "bg-purple-500"];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    return randomColor;
+  };
+
+  const username = currentUser?.username || "Admin";
+  const userBadge = getRandomBadge();
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar for larger screens */}
       <div
-        className={`bg-indigo-800 z-[1000] text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${
+        ref={sidebarRef}
+        className={`bg-blue-700 z-[1000] text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:relative md:translate-x-0 transition duration-200 ease-in-out`}>
         <div className="flex items-center justify-between px-4">
@@ -106,18 +136,25 @@ const AdminDashboard = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 ${
+              className={`flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 ${
                 location.pathname === item.path ? "bg-indigo-700" : ""
-              }`}>
+              }`}
+              data-tooltip-id={item.label}
+              data-tooltip-content={item.label}>
               <item.icon className="inline-block mr-2" />
-              {item.label}
+              <span className="inline">{item.label}</span>
             </Link>
           ))}
         </nav>
-        <div className="px-4 py-2 mt-auto">
-          <div className="bg-indigo-900 rounded-lg p-2 mb-4">
-            <span className="block text-sm">Admin</span>
-            <span className="block text-xs opacity-75">John Doe</span>
+        <div className="mt-auto px-4 py-2">
+          <div className="flex items-center bg-indigo-900 rounded-lg p-2 mb-4">
+            <div className={`h-8 w-8 rounded-full ${userBadge} flex items-center justify-center text-white font-bold`}>
+              {username.charAt(0).toUpperCase()}
+            </div>
+            <div className="ml-3">
+              <span className="block text-sm">{username}</span>
+              <span className="block text-xs opacity-75">Admin</span>
+            </div>
           </div>
           <button
             onClick={handleLogout}
@@ -151,6 +188,11 @@ const AdminDashboard = () => {
         onConfirm={confirmLogout}
         onCancel={cancelLogout}
       />
+
+      {/* Tooltips */}
+      {navItems.map((item) => (
+        <Tooltip key={item.label} id={item.label} place="right" />
+      ))}
     </div>
   );
 };

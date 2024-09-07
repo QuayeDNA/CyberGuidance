@@ -1,47 +1,61 @@
-// ChatList.jsx
-import { useState } from 'react';
-import { FiSearch } from 'react-icons/fi';
-import UserListItem from './UserListItem';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import { getAppointmentHistory } from '../../axiosServices/appointmentServices';
 
-const ChatList = ({ counselors, selectedUser, onSelectUser, isMobileView }) => {
+const ChatList = ({ onSelectAppointment }) => {
+  const [appointments, setAppointments] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredCounselors = counselors.filter((counselor) =>
-    counselor.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const appointmentHistory = await getAppointmentHistory();
+        setAppointments(appointmentHistory);
+      } catch (error) {
+        console.error('Error fetching appointment history:', error);
+      }
+    };
+
+    fetchAppointments();
+  }, []);
+
+  const filteredAppointments = appointments.filter(appointment =>
+    appointment.counselor &&
+    appointment.counselor.username &&
+    appointment.counselor.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className={`${isMobileView ? 'w-full' : 'w-2/8'} bg-white border-r border-gray-200 overflow-y-auto`}>
-      <div className="p-4 border-b border-gray-200">
-        <div className="relative">
-          <input
-            type="text"
-            className="w-full p-2 pl-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Search counselors..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        </div>
-      </div>
-      {filteredCounselors.map((counselor) => (
-        <UserListItem
-          key={counselor.id}
-          user={counselor}
-          isSelected={selectedUser && selectedUser.id === counselor.id}
-          onSelect={() => onSelectUser(counselor)}
-        />
-      ))}
+    <div className="w-full max-w-md p-4 bg-white shadow-md rounded-lg">
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search..."
+        className="w-full p-2 mb-4 border border-gray-300 rounded-lg"
+      />
+      <ul className="space-y-4">
+        {filteredAppointments.map((appointment) => (
+          <li
+            key={appointment.id}
+            className="flex items-center p-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100"
+            onClick={() => onSelectAppointment(appointment)}
+          >
+            <img
+              src={appointment.counselor.profilePicture}
+              alt={appointment.counselor.username}
+              className="w-12 h-12 rounded-full mr-4"
+            />
+            <span className="font-medium">{appointment.counselor.username}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
 
 ChatList.propTypes = {
-  counselors: PropTypes.array.isRequired,
-  selectedUser: PropTypes.object,
-  onSelectUser: PropTypes.func.isRequired,
-  isMobileView: PropTypes.bool.isRequired,
+  onSelectAppointment: PropTypes.func.isRequired,
 };
 
 export default ChatList;

@@ -7,8 +7,8 @@ function AppNavbar() {
     const navLinks = [
         { id: 1, to: '/counselor/dashboard', icon: <FaHome className="mr-2" />, text: 'Dashboard' },
         { id: 2, to: '/counselor/sessions', icon: <FaCalendarAlt className="mr-2" />, text: 'Sessions' },
-        { id: 3, to: '/counselor/messages', icon: <FaComments className="mr-2" />, text: 'Messages' },
-        { id: 4, to: '/counselor/profile', icon: <FaUserCircle className='mr-2' />, text: "Profile" },
+        { id: 3, to: '/counselor/message', icon: <FaComments className="mr-2" />, text: 'Messages' },
+        { id: 4, to: '/counselor/user', icon: <FaUserCircle className='mr-2' />, text: "Profile" },
         { id: 5, to: '/counselor/articles', icon: <FaRegNewspaper className='mr-2' />, text: "Articles" }
     ];
 

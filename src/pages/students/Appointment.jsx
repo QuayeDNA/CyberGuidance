@@ -112,9 +112,9 @@ const AppointmentHistory = () => {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="All">All Statuses</option>
-            <option value="Scheduled">Scheduled</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
           </select>
           <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </div>

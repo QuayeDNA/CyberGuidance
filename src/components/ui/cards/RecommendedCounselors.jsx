@@ -21,11 +21,7 @@ const CounselorsComponent = () => {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
-        const counselorsWithImageSource = response.data.counselors.map(counselor => ({
-          ...counselor,
-          imageSource: Math.random() > 0.5 ? 'ui-avatars' : 'picsum'
-        }));
-        setCounselors(counselorsWithImageSource);
+        setCounselors(response.data.counselors);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching recommended counselors:', error);
@@ -84,14 +80,18 @@ const CounselorsComponent = () => {
               </button>
               <div className="p-4">
                 <div className="relative w-24 h-24 mx-auto mb-3">
-                  <img
-                    src={counselor.imageSource === 'ui-avatars' 
-                      ? `https://ui-avatars.com/api/?name=${counselor.personalInfo?.fullName || counselor.username}&background=random` 
-                      : `https://picsum.photos/seed/${counselor._id}/200/200`}
-                    alt={counselor.personalInfo?.fullName || counselor.username}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                  <div className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border-2 border-white"></div>
+                  {counselor.personalInfo?.profilePicture ? (
+                    <img
+                      src={counselor.personalInfo.profilePicture}
+                      alt={counselor.personalInfo.fullName || counselor.username}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                      <FaUser className="text-gray-500 text-4xl" />
+                    </div>
+                  )}
+                  <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${counselor.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
                 </div>
                 <h3 className="text-lg font-semibold text-center mb-1 truncate">
                   {counselor.personalInfo?.fullName || counselor.username}

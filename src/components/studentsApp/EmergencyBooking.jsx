@@ -29,23 +29,30 @@ const EmergencyBookingButton = ({
     try {
       setBookingStatus("processing");
       const reason = "Urgent - Immediate counseling needed."; // Default urgent reason
-
+  
       // Call the emergency booking API
       const response = await bookEmergencyAppointment(counselorId, reason);
-
+  
       // If the request is successful
       if (response.success) {
         setBookingStatus("success");
         onBookingInitiated(); // Optional callback to notify booking initiation
       } else {
+        // If the response indicates an error
         throw new Error(response.message || "Failed to book emergency appointment");
       }
     } catch (err) {
       console.error("Error booking emergency appointment:", err);
-      setError(
-        err.message || "An error occurred. Please try again or call our emergency number."
-      );
-      setBookingStatus("error");
+      // Check if the error message indicates success
+      if (err.message.includes("successfully")) {
+        setBookingStatus("success");
+        onBookingInitiated();
+      } else {
+        setError(
+          err.message || "An error occurred. Please try again or call our emergency number."
+        );
+        setBookingStatus("error");
+      }
     }
   };
 

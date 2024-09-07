@@ -1,18 +1,24 @@
-import { useState, useEffect } from 'react';
-import { FaBell, FaSignOutAlt, FaBars, FaUserCircle, FaCalendarAlt, FaHome, FaComments,FaRegNewspaper } from 'react-icons/fa';
+import { useState, useEffect, useRef } from 'react';
+import { FaBell, FaSignOutAlt, FaBars, FaUserCircle, FaCalendarAlt, FaHome, FaComments, FaRegNewspaper } from 'react-icons/fa';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../components/contexts/AuthContext'; // Import useAuth hook
 import ConfirmationModal from './ConfirmationModal'; // Import ConfirmationModal component
+import { updateCounselorAvailability } from '../../axiosServices/reportApi'; // Import the API function
+import axios from 'axios';
 
 function Navbar() {
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [showMenuDropdown, setShowMenuDropdown] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false); // State for logout modal
     const [notifications, setNotifications] = useState([]);
+    const [isAvailable, setIsAvailable] = useState(false); // Initialize with false
+    const [isLoaded, setIsLoaded] = useState(false);
     const { logout } = useAuth(); // Get logout function from AuthContext
 
     const navigate = useNavigate();
+    const notificationRef = useRef(null);
+    const menuRef = useRef(null);
 
     const navLinks = [
         { id: 1, to: '/counselor/dashboard', icon: <FaHome className="mr-2" />, text: 'Dashboard' },
@@ -23,6 +29,28 @@ function Navbar() {
     ];
 
     useEffect(() => {
+        // Fetch user profile data to get availability status
+        const fetchProfileData = async () => {
+            try {
+                const response = await axios.get(
+                    "https://cyber-guidance.onrender.com/api/user-info/",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        },
+                    }
+                );
+                const profileData = response.data.user;
+                setIsAvailable(profileData.isAvailable);
+                setIsLoaded(true); // Set isLoaded to true after fetching data
+            } catch (err) {
+                console.error('Error fetching profile data:', err.message);
+                setIsLoaded(true); // Set isLoaded to true even if there's an error
+            }
+        };
+
+        fetchProfileData();
+
         // Simulating fetching notifications from an API
         const fetchNotifications = async () => {
             // Replace this with actual API call
@@ -58,14 +86,13 @@ function Navbar() {
         fetchNotifications();
     }, []);
 
-    
-  const markAsRead = (id) => {
-    setNotifications(
-      notifications.map((notif) =>
-        notif.id === id ? { ...notif, isRead: true } : notif
-      )
-    );
-  };
+    const markAsRead = (id) => {
+        setNotifications(
+            notifications.map((notif) =>
+                notif.id === id ? { ...notif, isRead: true } : notif
+            )
+        );
+    };
 
     const toggleNotificationDropdown = () => {
         setShowNotificationDropdown(!showNotificationDropdown);
@@ -85,6 +112,37 @@ function Navbar() {
         await logout();
         navigate('/login');
     };
+
+    const handleToggleAvailability = async () => {
+        try {
+            const newAvailability = !isAvailable;
+            await updateCounselorAvailability(newAvailability);
+            setIsAvailable(newAvailability);
+        } catch (error) {
+            console.error('Error updating availability:', error.message);
+        }
+    };
+
+    const handleClickOutside = (event) => {
+        if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+            setShowNotificationDropdown(false);
+        }
+        if (menuRef.current && !menuRef.current.contains(event.target)) {
+            setShowMenuDropdown(false);
+        }
+    };
+
+    useEffect(() => {
+        if (showNotificationDropdown || showMenuDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showNotificationDropdown, showMenuDropdown]);
 
     return (
         <header className="bg-white shadow-md py-4 fixed z-20 w-full">
@@ -123,6 +181,7 @@ function Navbar() {
                     <AnimatePresence>
                         {showNotificationDropdown && (
                             <motion.div
+                                ref={notificationRef}
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
@@ -168,6 +227,7 @@ function Navbar() {
                     <AnimatePresence>
                         {showMenuDropdown && (
                             <motion.div
+                                ref={menuRef}
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
@@ -183,6 +243,20 @@ function Navbar() {
                             </motion.div>
                         )}
                     </AnimatePresence>
+                    <div className="flex items-center space-x-2">
+                <span className="text-gray-700">Available</span>
+                {isLoaded && ( // Only render the toggle when data is loaded
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            checked={isAvailable} 
+                            onChange={handleToggleAvailability} 
+                            className="sr-only peer" 
+                        />
+                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                )}
+            </div>
                 </div>
             </div>
             {showLogoutModal && (

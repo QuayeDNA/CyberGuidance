@@ -1,5 +1,21 @@
 import axios from "axios";
 
+
+const API_BASE_URL = 'https://cyber-guidance.onrender.com';
+
+const getAuthToken = () => {
+  const userData = localStorage.getItem('userData');
+  return userData ? JSON.parse(userData).token : null;
+};
+
+const handleAuthError = (error) => {
+  if (error.response?.status === 401) {
+    localStorage.removeItem('userData');
+    window.location.href = '/login'; // Redirect to login page
+  }
+  throw error;
+};
+
 /**
  * Book an appointment with a counselor.
  * @param {string} date - The date for the appointment should be in the format: (YYYY-MM-DD).
@@ -70,37 +86,24 @@ export const getRecommendedCounselors = async () => {
         }
     }
 };
+
 export const getAppointmentHistory = async () => {
     try {
-      // Log the request details
-      console.log('Fetching appointment history...');
-      console.log('Request headers:', {
-        Authorization: `Bearer ${localStorage.getItem('userData')}`,
-      });
+      const token = getAuthToken();
+      if (!token) throw new Error('No authentication token found.');
   
-      // Make the GET request to fetch appointment history
-      const response = await axios.get('https://cyber-guidance.onrender.com/api/appointment-history', {
+      const response = await axios.get(`${API_BASE_URL}/api/appointment-history`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('userData')}`,
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem('userData')).token}`,
         },
       });
   
-      // Log the response details
-      console.log('Appointment history response:', response.data);
-  
-      // Return the list of appointments
       return response.data.appointments;
     } catch (error) {
-      // Log the error details
-      console.error('Error fetching appointment history:', error);
-      console.error('Error response:', error.response?.data);
-  
-      // Throw a user-friendly error message
-      throw new Error(error?.response?.data?.message || 'Failed to fetch appointment history. Please try again.');
+      handleAuthError(error);
     }
   };
 
-const API_BASE_URL = 'https://cyber-guidance.onrender.com';
 export const bookAppointmentWithACounselor = async (counselorId, date, timeSlot, reason) => {
     try {
       console.log('Sending booking request:', { counselorId, date, timeSlot, reason });

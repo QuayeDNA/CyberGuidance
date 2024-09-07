@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 
 class ChatSocket {
   constructor() {
-    this.socket = io('https://cyber-guidance.onrender.com/api/chat', {
+    this.socket = io('https://cyber-guidance.onrender.com', {
       auth: {
         token: localStorage.getItem('token') // Assuming you store the JWT token in localStorage
       }

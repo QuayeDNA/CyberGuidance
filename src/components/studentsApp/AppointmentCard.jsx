@@ -3,65 +3,18 @@ import PropTypes from 'prop-types';
 import moment from 'moment';
 import { FaFlag } from 'react-icons/fa';
 import { Tooltip } from 'react-tooltip';
-import ReportModal from './ReportCounsellor';
-import ConfirmReportModal from './ConfirmReportModal';
-import { reportCounselor } from '../../axiosServices/reportApi';
+import ReportModal from '../studentsApp/ReportCounsellor';
 
 const AppointmentCard = ({ appointment }) => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [reportReason, setReportReason] = useState('');
-  const [message, setMessage] = useState('');
 
   const handleOpenReportModal = () => setIsReportModalOpen(true);
-  const handleCloseReportModal = () => {
-    setIsReportModalOpen(false);
-    setReportReason('');
-  };
-
-  const handleOpenConfirmModal = () => {
-    setIsReportModalOpen(false);
-    setIsConfirmModalOpen(true);
-  };
-
-  const handleCloseConfirmModal = () => {
-    setIsConfirmModalOpen(false);
-    setReportReason('');
-  };
-
-  const handleSubmitReport = async () => {
-    try {
-      console.log("Submitting report with the following data:");
-      console.log({
-        appointmentId: appointment.id, // pass appointment id
-        reportDetails: reportReason, // reason for the report
-      });
-  
-      // Send only appointment ID and report details
-      const response = await reportCounselor(appointment.id, {
-        details: reportReason, // pass report details
-      });
-  
-      console.log("Response from server:", response.data);
-  
-      if (response.status === 201 && response.data.message === 'Report submitted successfully.') {
-        setMessage('Report submitted successfully');
-      } else {
-        setMessage('Failed to submit report');
-      }
-  
-      handleCloseConfirmModal();
-    } catch (error) {
-      console.error("Error submitting report:", error);
-      setMessage('Failed to submit report');
-    }
-  };
-  
+  const handleCloseReportModal = () => setIsReportModalOpen(false);
 
   return (
     <div className="bg-white shadow-md rounded-lg p-4 flex items-start space-x-4 hover:shadow-lg transition-shadow duration-300">
       <img 
-        src={appointment.counselor.avatarUrl || 'https://picsum.photos/200'} 
+        src={appointment.counselor.profilePicture || 'https://picsum.photos/200'} 
         alt={appointment.counselor.fullName} 
         className="w-16 h-16 rounded-full object-cover"
       />
@@ -90,20 +43,11 @@ const AppointmentCard = ({ appointment }) => {
         <ReportModal
           isOpen={isReportModalOpen}
           onClose={handleCloseReportModal}
-          onSubmit={handleOpenConfirmModal}
-          reportReason={reportReason}
-          setReportReason={setReportReason}
-        />
-        <ConfirmReportModal
-          isOpen={isConfirmModalOpen}
-          onClose={handleCloseConfirmModal}
-          onConfirm={handleSubmitReport}
+          appointmentId={appointment.id}
           counselorName={appointment.counselor.fullName}
           appointmentReason={appointment.reason}
-          reportDetails={reportReason}
         />
       </div>
-      {message && <p className="text-sm text-red-500 mt-2">{message}</p>}
     </div>
   );
 };

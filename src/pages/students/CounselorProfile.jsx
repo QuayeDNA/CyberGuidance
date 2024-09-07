@@ -98,7 +98,7 @@ const CounselorProfile = () => {
 
 const getRandomColor = () => {
   const colors = [
-    'bg-red-200', 'bg-green-200', 'bg-blue-200', 'bg-yellow-200', 'bg-purple-200', 'bg-pink-200', 'bg-indigo-200'
+    'bg-red-200', 'bg-green-200', 'bg-blue-200', 'bg-yellow-200', 'bg-purple-200', 'bg-pink-200', 'bg-indigo-200', 
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 };
@@ -107,16 +107,24 @@ const CounselorProfileCard = ({ counselor, handleBookAppointment, handleEmergenc
   <div className="bg-white shadow-xl rounded-lg overflow-hidden">
     <div className="p-8">
       <div className="flex items-center justify-center mb-6">
-        <FaUserCircle className="text-8xl text-blue-500" />
+        {counselor.personalInfo?.profilePicture ? (
+          <img
+            src={counselor.personalInfo.profilePicture}
+            alt={counselor.personalInfo.fullName}
+            className="w-32 h-32 rounded-full object-cover"
+          />
+        ) : (
+          <FaUserCircle className="text-8xl text-blue-500" />
+        )}
       </div>
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">{counselor?.personalInfo?.fullName}</h1>
+      <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">{counselor.personalInfo?.fullName}</h1>
       <div className="flex items-center justify-center text-gray-600 mb-6">
         <FaEnvelope className="mr-2" />
-        <span>{counselor?.email}</span>
+        <span>{counselor.email}</span>
       </div>
       <div className="flex items-center justify-center text-gray-600 mb-6">
         <FaPhoneAlt className="mr-2" />
-        <span>{counselor?.personalInfo?.mobileNumber}</span>
+        <span>{counselor.personalInfo?.mobileNumber}</span>
       </div>
       <div className="flex justify-center space-x-4 mb-8">
         <button
@@ -135,12 +143,12 @@ const CounselorProfileCard = ({ counselor, handleBookAppointment, handleEmergenc
         </button>
       </div>
       <div className="text-gray-600 text-center space-y-4">
-        <p>{counselor?.personalInfo?.bio}</p>
-        <p>Department: {counselor?.personalInfo?.department}</p>
+        <p>{counselor.personalInfo?.bio}</p>
+        <p>Department: {counselor.personalInfo?.department}</p>
         <div className="text-gray-600 text-center">
           <p className="font-bold">Specialties:</p>
           <div className="flex flex-wrap justify-center gap-2 mt-2">
-            {counselor?.specialties?.map((specialty, index) => (
+            {counselor.specialties?.map((specialty, index) => (
               <span
                 key={index}
                 className={`px-3 py-1 rounded-full text-sm font-medium ${getRandomColor()}`}
@@ -157,11 +165,8 @@ const CounselorProfileCard = ({ counselor, handleBookAppointment, handleEmergenc
 
 CounselorProfileCard.propTypes = {
   counselor: PropTypes.object.isRequired,
-  handleReport: PropTypes.func.isRequired,
   handleBookAppointment: PropTypes.func.isRequired,
   handleEmergencyBooking: PropTypes.func.isRequired,
 };
-
-
 
 export default CounselorProfile;
