@@ -51,7 +51,7 @@ function ProfileSection() {
         <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-8">
           <div className="flex-shrink-0 w-32 h-32 rounded-full overflow-hidden shadow-lg">
             <img
-              src={`https://picsum.photos/200?random=${profileData._id}`}
+              src={profileData.personalInfo.profilePicture}
               alt="Profile"
               className="w-full h-full object-cover"
             />

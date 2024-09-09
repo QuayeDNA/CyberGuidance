@@ -7,35 +7,45 @@ import CommunicationSystem from '../../components/studentsApp/Chats';
 const MessagingComponent = () => {
     const { userData, token, loading } = useAuth();
     const [appointments, setAppointments] = useState([]);
+    const [userInfo, setUserInfo] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const isPinSet = !!localStorage.getItem('userPin');
 
     useEffect(() => {
-        const fetchAppointments = async () => {
+        const fetchData = async () => {
             if (token) {
                 try {
-                    const response = await axios.get('https://cyber-guidance.onrender.com/api/appointment-history', {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    setAppointments(response.data.appointments); // Ensure correct response structure
+                    const [appointmentsResponse, userInfoResponse] = await Promise.all([
+                        axios.get('https://cyber-guidance.onrender.com/api/appointment-history', {
+                            headers: { Authorization: `Bearer ${token}` }
+                        }),
+                        axios.get('https://cyber-guidance.onrender.com/api/user-info', {
+                            headers: { Authorization: `Bearer ${token}` }
+                        })
+                    ]);
+
+                    setAppointments(appointmentsResponse.data.appointments);
+                    setUserInfo(userInfoResponse.data.user);
                 } catch (error) {
-                    console.error('Error fetching appointments:', error);
+                    console.error('Error fetching data:', error);
                 } finally {
                     setIsLoading(false);
                 }
             }
         };
 
-        fetchAppointments();
+        fetchData();
     }, [token]);
 
     if (loading || isLoading) {
         return <div>Loading...</div>;
     }
 
-    if (!userData || !token) {
+    if (!userData || !token || !userInfo) {
         return <div>Please log in to access messaging.</div>;
     }
+
+    const userType = userData.isStudent ? "student" : (userData.isCounselor ? "counselor" : "admin");
 
     return (
         <div className="flex flex-col justify-center items-center">
@@ -49,8 +59,22 @@ const MessagingComponent = () => {
             <CommunicationSystem 
                 userToken={token}
                 userId={userData.userId}
-                userType={userData.isStudent ? "student" : (userData.isCounselor ? "counselor" : "admin")}
+                userType={userType}
                 appointments={appointments}
+                userName={userInfo.personalInfo.fullName}
+                userAvatar={userInfo.personalInfo.profilePicture}
+                userDetails={{
+                    yearOfStudy: userInfo.personalInfo.yearOfStudy,
+                    faculty: userInfo.personalInfo.faculty,
+                    gender: userInfo.personalInfo.gender,
+                    age: userInfo.personalInfo.age,
+                    programOfStudy: userInfo.personalInfo.programOfStudy,
+                    department: userInfo.personalInfo.department,
+                    hallOfResidence: userInfo.personalInfo.hallOfResidence,
+                    mobileNumber: userInfo.personalInfo.mobileNumber,
+                    email: userInfo.email,
+                    isOnline: userInfo.isOnline
+                }}
             />
         </div>
     );

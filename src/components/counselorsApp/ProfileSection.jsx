@@ -55,9 +55,7 @@ function ProfileSection() {
           <div className="flex-shrink-0 w-32 h-32 rounded-full overflow-hidden shadow-lg">
           <img
               src={
-                profileData.imageSource === 'ui-avatars'
-                  ? `https://ui-avatars.com/api/?name=${profileData.username}&background=random&color=fff`
-                  : `https://picsum.photos/200?random=${profileData._id}`
+                profileData.personalInfo.profilePicture
               }
               alt={`${profileData.username}'s profile`}
               className="w-full h-full object-cover"

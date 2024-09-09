@@ -17,26 +17,26 @@ function PersonalInfoSection() {
         });
         setPersonalInfo(response.data.user.personalInfo);
 
-          // Extract first name and store in local storage
-          const fullName = response.data.user.personalInfo.fullName;
-          const firstName = fullName.split(' ')[0];
-          localStorage.setItem('userFirstName', firstName);
-        } catch (err) {
-          if (err.response) {
-            setError(err.response.data.message);
-          } else if (err.request) {
-            setError('No response received from server');
-          } else {
-            setError('An error occurred');
-          }
-        } finally {
-          setLoading(false);
+        // Extract first name and store in local storage
+        const fullName = response.data.user.personalInfo.fullName;
+        const firstName = fullName.split(' ')[0];
+        localStorage.setItem('userFirstName', firstName);
+      } catch (err) {
+        if (err.response) {
+          setError(err.response.data.message);
+        } else if (err.request) {
+          setError('No response received from server');
+        } else {
+          setError('An error occurred');
         }
-      };
-  
-      fetchProfileData();
-    }, []);
-    
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
   return (
     <section className="bg-white rounded-lg shadow-md p-6 mb-8">
       <h2 className="text-2xl font-bold mb-4">Personal Information</h2>
@@ -55,9 +55,16 @@ function PersonalInfoSection() {
       ) : personalInfo ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.entries(personalInfo).map(([key, value], index) => (
-            <p key={index} className="text-gray-700">
-              <span className="font-bold">{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</span> {value}
-            </p>
+            <div key={index} className="text-gray-700">
+              <span className="font-bold">
+                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+              </span>
+              {key === 'profilePicture' ? (
+                <img src={value} alt="Profile" className="mt-2 rounded-full shadow-md" />
+              ) : (
+                <p>{value}</p>
+              )}
+            </div>
           ))}
         </div>
       ) : (

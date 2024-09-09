@@ -50,7 +50,10 @@ const PersonalInfoForm = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const formDataToSend = new FormData(e.target);
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach((key) => {
+        formDataToSend.append(key, formData[key]);
+      });
       const response = await axios.put(
         "https://cyber-guidance.onrender.com/api/personal-info",
         formDataToSend,
@@ -89,7 +92,7 @@ const PersonalInfoForm = () => {
             name={name}
             value={formData[name]}
             onChange={handleInputChange}
-           className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3"
+            className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3"
           >
             {options.map((option) => (
               <option key={option} value={option}>
@@ -113,6 +116,14 @@ const PersonalInfoForm = () => {
               </label>
             ))}
           </div>
+        ) : type === "file" ? (
+          <input
+            type={type}
+            id={name}
+            name={name}
+            onChange={handleInputChange}
+            className="w-full rounded-md shadow-sm border-gray-200 focus:border-blue-500 border-2 focus:ring-blue-500 sm:text-sm p-3"
+          />
         ) : (
           <input
             type={type}
