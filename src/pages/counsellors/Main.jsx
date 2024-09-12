@@ -4,11 +4,11 @@ import Navbar from "../../components/counselorsApp/Navbar";
 import AppNavbar from "../../components/counselorsApp/AppNavbar"
 import Dashboard from "./Dashboard";
 import Sessions from '../../components/counselorsApp/CounselorSessions'
-import Messaging from "./Messaging";
+import Messaging from "../Messaging";
 import User from "./User";
 import Articles from './Articles';
-import PinEntry from '../../components/counselorsApp/PinEntry';
-import CreatePin from '../../components/counselorsApp/CreatePin';
+import PinEntry from '../../components/PinEntry';
+import CreatePin from '../../components/CreatePin';
 
 function Main() {
     const [isPinVerified, setIsPinVerified] = useState(false);

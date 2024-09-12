@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { FiSend, FiVideo, FiVideoOff, FiMic, FiMicOff, FiMaximize, FiMinimize, FiPhone, FiMessageSquare } from 'react-icons/fi';
+import { FiSend, FiVideo, FiVideoOff, FiMic, FiMicOff, FiMaximize, FiMinimize, FiPhone, FiMessageSquare, FiShare, FiSettings, FiUserPlus } from 'react-icons/fi';
 
-const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, leaveRoom, showChat, toggleChat }) => {
+const VideoChat = ({ socket, roomId, userId, messages, sendMessage, leaveRoom, showChat, toggleChat }) => {
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [peerConnections, setPeerConnections] = useState({});
   const [streams, setStreams] = useState({});
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [participants, setParticipants] = useState([]);
+  const [showSettings, setShowSettings] = useState(false);
   const localVideoRef = useRef(null);
   const chatContainerRef = useRef(null);
 
@@ -48,8 +51,9 @@ const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, le
       socket.emit('offer', { roomId, offer, to: peerId });
     };
 
-    socket.on('user_joined', ({ userId: peerId }) => {
+    socket.on('user_joined', ({ userId: peerId, userName }) => {
       initializePeerConnection(peerId);
+      setParticipants(prev => [...prev, { id: peerId, name: userName }]);
     });
 
     socket.on('offer', async ({ offer, from }) => {
@@ -74,6 +78,15 @@ const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, le
       if (pc) {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       }
+    });
+
+    socket.on('user_left', ({ userId: peerId }) => {
+      setStreams(prev => {
+        const newStreams = { ...prev };
+        delete newStreams[peerId];
+        return newStreams;
+      });
+      setParticipants(prev => prev.filter(p => p.id !== peerId));
     });
 
     return () => {
@@ -110,11 +123,52 @@ const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, le
     setIsFullScreen(!isFullScreen);
   };
 
+  const toggleScreenShare = async () => {
+    if (!isScreenSharing) {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const videoTrack = screenStream.getVideoTracks()[0];
+        
+        Object.values(peerConnections).forEach(pc => {
+          const sender = pc.getSenders().find(s => s.track.kind === 'video');
+          sender.replaceTrack(videoTrack);
+        });
+
+        localVideoRef.current.srcObject = screenStream;
+        setIsScreenSharing(true);
+
+        videoTrack.onended = () => {
+          toggleScreenShare();
+        };
+      } catch (error) {
+        console.error("Error sharing screen:", error);
+      }
+    } else {
+      const userStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const videoTrack = userStream.getVideoTracks()[0];
+
+      Object.values(peerConnections).forEach(pc => {
+        const sender = pc.getSenders().find(s => s.track.kind === 'video');
+        sender.replaceTrack(videoTrack);
+      });
+
+      localVideoRef.current.srcObject = userStream;
+      setIsScreenSharing(false);
+    }
+  };
+
   const handleSendMessage = () => {
     if (inputMessage.trim() !== '') {
       sendMessage(inputMessage);
       setInputMessage('');
     }
+  };
+
+  const inviteParticipant = () => {
+    const inviteLink = `${window.location.origin}/join/${roomId}`;
+    navigator.clipboard.writeText(inviteLink).then(() => {
+      alert("Invitation link copied to clipboard!");
+    });
   };
 
   const Tooltip = ({ children, content }) => (
@@ -132,12 +186,12 @@ const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, le
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-100">
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 overflow-y-auto">
         <div className="relative">
           <video ref={localVideoRef} autoPlay muted className="w-full h-full object-cover rounded-lg shadow-lg" />
           <div className="absolute bottom-2 left-2 bg-blue-500 text-white px-2 py-1 text-xs rounded-full">
-            You
+            You {isScreenSharing && '(Screen)'}
           </div>
         </div>
         {Object.entries(streams).map(([peerId, stream]) => (
@@ -148,7 +202,7 @@ const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, le
               className="w-full h-full object-cover rounded-lg shadow-lg"
             />
             <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 text-xs rounded-full">
-              Peer
+              {participants.find(p => p.id === peerId)?.name || 'Peer'}
             </div>
           </div>
         ))}
@@ -164,9 +218,24 @@ const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, le
             {isAudioOn ? <FiMic className="text-white" size={20} /> : <FiMicOff className="text-white" size={20} />}
           </button>
         </Tooltip>
+        <Tooltip content={isScreenSharing ? 'Stop sharing screen' : 'Share screen'}>
+          <button onClick={toggleScreenShare} className={`p-3 rounded-full ${isScreenSharing ? 'bg-green-500' : 'bg-blue-500'} transition duration-300`}>
+            <FiShare className="text-white" size={20} />
+          </button>
+        </Tooltip>
         <Tooltip content={isFullScreen ? 'Exit full screen' : 'Enter full screen'}>
           <button onClick={toggleFullScreen} className="p-3 rounded-full bg-gray-500 text-white transition duration-300">
             {isFullScreen ? <FiMinimize size={20} /> : <FiMaximize size={20} />}
+          </button>
+        </Tooltip>
+        <Tooltip content="Invite participant">
+          <button onClick={inviteParticipant} className="p-3 rounded-full bg-purple-500 text-white transition duration-300">
+            <FiUserPlus size={20} />
+          </button>
+        </Tooltip>
+        <Tooltip content="Settings">
+          <button onClick={() => setShowSettings(!showSettings)} className="p-3 rounded-full bg-gray-500 text-white transition duration-300">
+            <FiSettings size={20} />
           </button>
         </Tooltip>
         <Tooltip content="Leave session">
@@ -175,13 +244,16 @@ const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, le
           </button>
         </Tooltip>
         <Tooltip content={showChat ? 'Hide chat' : 'Show chat'}>
-          <button onClick={toggleChat} className="p-3 rounded-full bg-purple-500 text-white transition duration-300">
+          <button onClick={toggleChat} className="p-3 rounded-full bg-blue-500 text-white transition duration-300">
             <FiMessageSquare size={20} />
           </button>
         </Tooltip>
       </div>
       {showChat && (
         <div className="absolute top-0 right-0 w-full sm:w-1/3 lg:w-1/4 h-full bg-white border-l border-gray-200 flex flex-col">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold">Chat</h2>
+          </div>
           <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg, index) => (
               <div key={index} className={`flex ${msg.sender.id === userId ? 'justify-end' : 'justify-start'}`}>
@@ -214,6 +286,41 @@ const VideoChat = ({ socket, roomId, userId, userType, messages, sendMessage, le
           </div>
         </div>
       )}
+      {showSettings && (
+        <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">Settings</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Select Camera</label>
+                <select className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                  <option>Camera 1</option>
+                  <option>Camera 2</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Select Microphone</label>
+                <select className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                  <option>Microphone 1</option>
+                  <option>Microphone 2</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Select Speaker</label>
+                <select className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                  <option>Speaker 1</option>
+                  <option>Speaker 2</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button onClick={() => setShowSettings(false)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -222,7 +329,6 @@ VideoChat.propTypes = {
   socket: PropTypes.object.isRequired,
   roomId: PropTypes.string.isRequired,
   userId: PropTypes.string.isRequired,
-  userType: PropTypes.string.isRequired,
   messages: PropTypes.arrayOf(PropTypes.shape({
     message: PropTypes.string.isRequired,
     sender: PropTypes.shape({

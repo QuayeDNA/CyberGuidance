@@ -1,30 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { isSameDay, format } from 'date-fns';
 import { FaClock, FaInfoCircle } from 'react-icons/fa';
+import { getAppointmentHistory } from '../../axiosServices/appointmentServices'; // Adjust the import path as needed
 
 const MeetingCalendar = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showModal, setShowModal] = useState(false);
     const [modalContent, setModalContent] = useState({ date: null, details: '' });
+    const [appointments, setAppointments] = useState([]);
 
-    const meetingDates = [
-        { date: '2024-07-05', details: 'Team meeting', time: '10:00 AM' },
-        { date: '2024-07-10', details: 'Client presentation', time: '2:00 PM' },
-        { date: '2024-07-15', details: 'Project review', time: '11:30 AM' },
-        { date: '2024-07-18', details: 'Training session', time: '3:00 PM' },
-        { date: '2024-07-25', details: 'Board meeting', time: 'All day' },
-    ];
+    useEffect(() => {
+        const fetchAppointments = async () => {
+            try {
+                const data = await getAppointmentHistory();
+                setAppointments(data);
+            } catch (error) {
+                console.error('Error fetching appointment history:', error);
+            }
+        };
+
+        fetchAppointments();
+    }, []);
 
     const tileClassName = ({ date }) => {
-        return meetingDates.some(meeting => isSameDay(new Date(meeting.date), date)) 
+        return appointments.some(appointment => isSameDay(new Date(appointment.date), date)) 
             ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200 cursor-pointer rounded-full' 
             : 'hover:bg-gray-100 rounded-full';
     };
 
     const getMeetingDetails = (date) => {
-        return meetingDates.filter(meeting => isSameDay(new Date(meeting.date), date));
+        return appointments.filter(appointment => isSameDay(new Date(appointment.date), date));
     };
 
     const handleDateClick = (date) => {
@@ -59,8 +66,8 @@ const MeetingCalendar = () => {
                                     <li key={index} className="flex items-start space-x-3 bg-indigo-50 p-3 rounded-lg">
                                         <FaClock className="text-indigo-500 mt-1" />
                                         <div>
-                                            <p className="font-medium text-indigo-700">{meeting.details}</p>
-                                            <p className="text-sm text-indigo-500">{meeting.time}</p>
+                                            <p className="font-medium text-indigo-700">{meeting.reason}</p>
+                                            <p className="text-sm text-indigo-500">{meeting.timeSlot}</p>
                                         </div>
                                     </li>
                                 ))}
