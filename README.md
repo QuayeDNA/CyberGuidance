@@ -1,6 +1,7 @@
+---
+https://github.com/QuayeDNA/CyberGuidance
 
 ---
-
 # Cyber Guidance App Frontend Documentation
 
 ## Overview
@@ -36,8 +37,8 @@ Follow these steps to set up the development environment and run the project loc
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/QuayeDNA/CyberGuidance
+   cd 
    ```
 2. **Install dependencies:**
    ```bash
@@ -104,12 +105,12 @@ The component structure follows a hierarchical model:
 
 ### Common Tasks
 
-- **Creating a New Component:** Add a new file in the `components` directory and follow the existing component structure.
-- **Adding a Library:** Use npm or Yarn to install new libraries and ensure they are documented in the `package.json`.
+- **Creating a New Component:** Add a new file in the [`components`](command:_github.copilot.openSymbolFromReferences?%5B%22%22%2C%5B%7B%22uri%22%3A%7B%22scheme%22%3A%22file%22%2C%22authority%22%3A%22%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FWINIFRED%2FDesktop%2FCyberGuidance%2FREADME.md%22%2C%22query%22%3A%22%22%2C%22fragment%22%3A%22%22%7D%2C%22pos%22%3A%7B%22line%22%3A72%2C%22character%22%3A3%7D%7D%2C%7B%22uri%22%3A%7B%22scheme%22%3A%22file%22%2C%22authority%22%3A%22%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FWINIFRED%2FDesktop%2FCyberGuidance%2FREADME.md%22%2C%22query%22%3A%22%22%2C%22fragment%22%3A%22%22%7D%2C%22pos%22%3A%7B%22line%22%3A72%2C%22character%22%3A3%7D%7D%5D%2C%2287c775ad-b4c3-4e2c-a9d2-b437fefacba4%22%5D "Go to definition") directory and follow the existing component structure.
+- **Adding a Library:** Use npm or Yarn to install new libraries and ensure they are documented in the [`package.json`](command:_github.copilot.openRelativePath?%5B%7B%22scheme%22%3A%22file%22%2C%22authority%22%3A%22%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FWINIFRED%2FDesktop%2FCyberGuidance%2Fpackage.json%22%2C%22query%22%3A%22%22%2C%22fragment%22%3A%22%22%7D%2C%2287c775ad-b4c3-4e2c-a9d2-b437fefacba4%22%5D "c:\Users\WINIFRED\Desktop\CyberGuidance\package.json").
 
 ### Environment Management
 
-Different environment settings can be managed through `.env` files for development, testing, and production.
+Different environment settings can be managed through [`.env`](command:_github.copilot.openRelativePath?%5B%7B%22scheme%22%3A%22file%22%2C%22authority%22%3A%22%22%2C%22path%22%3A%22%2Fc%3A%2FUsers%2FWINIFRED%2FDesktop%2FCyberGuidance%2F.env%22%2C%22query%22%3A%22%22%2C%22fragment%22%3A%22%22%7D%2C%2287c775ad-b4c3-4e2c-a9d2-b437fefacba4%22%5D "c:\Users\WINIFRED\Desktop\CyberGuidance\.env") files for development, testing, and production.
 
 ## Testing
 
@@ -194,3 +195,30 @@ Follow the project’s code of conduct to ensure a welcoming environment for all
 ### Project License
 
 The Cyber Guidance app is licensed under the MIT License. See the LICENSE file for more details.
+
+## Additional Information
+
+### API Integration
+
+The app integrates with various backend services to provide real-time data and functionalities. Ensure that the backend services are running and accessible.
+
+### Security Considerations
+
+- **Authentication:** Ensure that user authentication is implemented securely.
+- **Data Privacy:** Handle user data with care and comply with relevant data protection regulations.
+
+### Performance Optimization
+
+- **Code Splitting:** Use code splitting to improve load times.
+- **Lazy Loading:** Implement lazy loading for components and assets to enhance performance.
+
+### Future Enhancements
+
+- **Mobile App:** Consider developing a mobile version of the app.
+- **AI Integration:** Explore integrating AI for personalized counseling recommendations.
+
+### Contact Information
+
+For any queries or support, please contact the project maintainers at [support@cyberguidance.com](mailto:support@cyberguidance.com).
+
+---
