@@ -63,25 +63,25 @@ const CommunicationSystem = ({
       addLog(`Socket error: ${error.message}`);
     });
 
-    newSocket.on("receive_message", ({ user, message, roomId }) => {
-      console.log(
-        `Received message: ${message} from ${user.type} ${user.id} in room ${roomId}`
-      );
-      if (user.id !== userId) {
+    newSocket.on("receive_message", ({ id, user, message, roomId }) => {
+      console.log(`Received message: ${message} from ${user.type} ${user.id} in room ${roomId}`);
+    
+      // Only add the message if it's not from the current user or doesn't have the same ID as a locally sent message
+      if (user.id !== userId && !messages[roomId]?.some(msg => msg.id === id)) {
         setMessages((prev) => ({
           ...prev,
           [roomId]: [
             ...(prev[roomId] || []),
-            { message, sender: user, timestamp: new Date().toISOString() },
+            { id, message, sender: user, timestamp: new Date().toISOString() },
           ],
         }));
-        addLog(
-          `Received message in room ${roomId} from ${user.type} ${user.id}`
-        );
+        addLog(`Received message in room ${roomId} from ${user.type} ${user.id}`);
       } else {
-        console.log("Ignored message from self");
+        console.log("Ignored message from self or duplicate");
       }
     });
+    
+    
 
     newSocket.on("user_typing", ({ roomId, userId: typingUserId }) => {
       setIsTyping((prev) => ({ ...prev, [roomId]: typingUserId }));
@@ -115,22 +115,29 @@ const CommunicationSystem = ({
   const sendMessage = useCallback(() => {
     if (inputMessage.trim() !== "" && selectedUser) {
       const roomId = selectedUser.roomId;
-      console.log(`Sending message to room ${roomId}: ${inputMessage}`);
-      addLog(`Sending message to room ${roomId}`);
+      const messageId = `${userId}-${new Date().getTime()}`; // Create a unique ID for the message
+  
       const newMessage = {
+        id: messageId, // Include the unique ID
         message: inputMessage,
         sender: { id: userId, type: userType, name: userName },
         roomId,
         timestamp: new Date().toISOString(),
       };
+      
+      // Emit the message to the server
       socket.emit("send_message", newMessage);
+      
+      // Add the message to the local state immediately
       setMessages((prev) => ({
         ...prev,
         [roomId]: [...(prev[roomId] || []), newMessage],
       }));
+  
       setInputMessage("");
     }
   }, [inputMessage, selectedUser, userId, userType, userName, socket, addLog]);
+  
 
   const handleTyping = useCallback(() => {
     if (selectedUser) {
