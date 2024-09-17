@@ -1,6 +1,5 @@
 ---
 https://github.com/QuayeDNA/CyberGuidance
-
 ---
 # Cyber Guidance App Frontend Documentation
 
@@ -145,7 +144,24 @@ npm run build
 
 ### Deployment Steps
 
-Deploy the built application using your preferred hosting service. Ensure any necessary CI/CD processes are set up for continuous deployment.
+To deploy the application using Vercel:
+
+1. **Sign up or log in to Vercel:** Visit [Vercel](vscode-file://vscode-app/c:/Users/WINIFRED/AppData/Local/Programs/Microsoft%20VS%20Code/resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) and sign up for an account or log in if you already have one.
+2. **Import the project:**
+   * Click on the "New Project" button.
+   * Select the GitHub repository for the Cyber Guidance app.
+3. **Configure the project:**
+   * Ensure the root directory is selected.
+   * Set the build command to `npm run build`.
+   * Set the output directory to `dist`.
+4. **Deploy the project:**
+   * Click on the "Deploy" button.
+   * Vercel will build and deploy the project.
+5. **Set up environment variables:**
+   * Go to the project settings in Vercel.
+   * Add any necessary environment variables under the "Environment Variables" section.
+6. **Access the deployed application:**
+   * Once the deployment is complete, you will receive a URL to access the deployed application.
 
 ## Contributing
 
