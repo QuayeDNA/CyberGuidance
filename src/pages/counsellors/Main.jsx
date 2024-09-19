@@ -48,7 +48,7 @@ function Main() {
 
     return (
         <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col">
-            <Navbar className="sticky top-0 z-50 shadow-md" />
+            <Navbar className="sticky top-0 z-50 shadow-lg" />
             
             <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-16 mb-20 md:mb-8">
                 <Routes>
@@ -63,7 +63,7 @@ function Main() {
                 </Routes>
             </main>
             
-            <AppNavbar className="fixed bottom-0 left-0 right-0 bg-white shadow-lg md:hidden" />
+            <AppNavbar className="fixed bottom-0 left-0 right-0 bg-white shadow-lg" />
         </div>
     );
 }

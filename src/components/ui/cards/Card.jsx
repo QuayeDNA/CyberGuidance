@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'; // Ensure this is imported
 
 const Card = ({ title, children, className, showAllLink }) => {
   return (
-    <div className={`bg-white shadow-lg rounded-lg p-4 ${className}`}>
+    <div className={`${className}`}>
       <div className="flex justify-between items-center">
         {title && <h2 className="font-bold text-lg text-gray-600">{title}</h2>}
         {showAllLink && (

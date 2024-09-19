@@ -13,9 +13,8 @@ function AppNavbar() {
         { id: 6, to: '/student/articles', icon: <FaRegNewspaper className='mr-2' />, text: "Articles" }
     ];
     return (
-        <nav className="bg-white shadow-md py-4 border-t-[1px] border-gray-100 fixed z-10 w-full mt-16 block md:hidden bottom-0">
+        <nav className="bg-white shadow-md py-4 border-t border-gray-100 fixed z-10 w-full mt-16 block lg:hidden bottom-0">
             <div className="mx-auto px-2 flex justify-center items-center">
-
 
                 {/* Small screen navigation */}
                 <div className="space-x-4 flex items-center">

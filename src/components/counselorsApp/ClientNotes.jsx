@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MdAdd, MdDownload, MdDelete, MdNote, MdEdit, MdSave, MdClose } from 'react-icons/md';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css'; // Import Quill styles
-import '../css/Notes.css'
+import '../css/Notes.css';
 
 function Notes() {
     const [notes, setNotes] = useState([]);
     const [selectedNote, setSelectedNote] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editedNote, setEditedNote] = useState({ date: '', note: '' });
+    const quillRef = useRef(null);
 
     useEffect(() => {
         const storedNotes = JSON.parse(localStorage.getItem('notes')) || [];
@@ -144,7 +145,7 @@ function Notes() {
                 <div className="max-h-[300px] overflow-y-auto">
                     <h3 className="text-lg font-semibold mb-4">All Notes</h3>
                     {notes.map((note) => (
-                        <button
+                                               <button
                             key={note.id}
                             className={`p-4 mb-4 rounded-lg cursor-pointer w-full text-left transition-all duration-200 ${selectedNote && selectedNote.id === note.id
                                 ? 'bg-blue-100 border-blue-300'
@@ -154,15 +155,15 @@ function Notes() {
                         >
                             <div className="flex justify-between items-start">
                                 <p className="text-sm text-gray-600">{note.date}</p>
-                                <button
+                                <span
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteNote(note.id);
                                     }}
-                                    className="text-red-500 hover:text-red-700"
+                                    className="text-red-500 hover:text-red-700 cursor-pointer"
                                 >
                                     <MdDelete />
-                                </button>
+                                </span>
                             </div>
                             <p className="mt-2 text-gray-800 truncate">{stripHtml(note.note)}</p>
                         </button>
@@ -188,6 +189,7 @@ function Notes() {
                                     </button>
                                 </div>
                                 <ReactQuill
+                                    ref={quillRef}
                                     theme="snow"
                                     value={editedNote.note}
                                     onChange={(content) => setEditedNote({ ...editedNote, note: content })}

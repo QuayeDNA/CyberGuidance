@@ -71,7 +71,7 @@ function Main() {
         </Routes>
       </main>
 
-      <AppNavbar className="fixed bottom-0 left-0 right-0 bg-white shadow-lg md:hidden" />
+      <AppNavbar className="fixed bottom-0 left-0 right-0 bg-white shadow-lg" />
     </div>
   );
 }

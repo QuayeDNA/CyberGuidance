@@ -65,15 +65,15 @@ const CounselorsComponent = () => {
   }
 
   return (
-    <div className="p-4">
+    <div>
       <h2 className="text-xl font-light mb-4 text-gray-800">Recommended Counselors</h2>
       <div className="overflow-x-auto pb-4">
         <div className="flex space-x-4">
           {counselors.map((counselor) => (
-            <div key={counselor._id} className="flex-shrink-0 w-64 bg-white rounded-lg shadow-md overflow-hidden relative">
+            <div key={counselor._id} className="flex-shrink-0 overflow-hidden relative">
               <button
                 onClick={() => handleEmergencyBooking(counselor)}
-                className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
+                className="absolute top-2 right-2 p-2 opacity-50 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-10"
                 aria-label="Emergency Booking"
               >
                 <FaExclamationCircle />
@@ -84,25 +84,22 @@ const CounselorsComponent = () => {
                     <img
                       src={counselor.personalInfo.profilePicture}
                       alt={counselor.personalInfo.fullName || counselor.username}
-                      className="w-full h-full rounded-full object-cover"
+                      className="w-full h-full rounded-full object-cover shadow-lg"
                     />
                   ) : (
                     <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
                       <FaUser className="text-gray-500 text-4xl" />
                     </div>
                   )}
-                  <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${counselor.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <div className={`absolute shadow-lg bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${counselor.isAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
                 </div>
                 <h3 className="text-lg font-semibold text-center mb-1 truncate">
                   {counselor.personalInfo?.fullName || counselor.username}
                 </h3>
-                <p className="text-sm text-gray-600 text-center mb-3 h-12 overflow-hidden">
-                  {counselor.specialties.join(", ")}
-                </p>
                 <div className="text-center">
                   <button
                     onClick={() => handleCounselorSelect(counselor._id)}
-                    className="py-1 px-4 text-sm rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors inline-flex items-center"
+                    className="py-1 px-4 text-sm rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors inline-flex items-center shadow-lg"
                   >
                     <FaUser className="mr-1" /> Book Appointment
                   </button>
