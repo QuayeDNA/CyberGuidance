@@ -193,7 +193,7 @@ const CommunicationSystem = ({
   const toggleSidebar = () => setShowSidebar(!showSidebar);
 
   return (
-    <div className="flex m-auto h-[calc(100vh-10rem)] bg-gray-100 max-w-6xl shadow-2xl rounded-lg overflow-hidden relative">
+    <div className="flex m-auto h-[calc(100vh-10rem)] bg-gray-100 lg:max-w-3xl max-w-2xl shadow-2xl rounded-lg overflow-hidden relative">
       {/* Sidebar */}
       <AnimatePresence>
         {showSidebar && (
