@@ -1,24 +1,38 @@
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { FiSend, FiVideo, FiVideoOff, FiMic, FiMicOff, FiMaximize, FiMinimize, FiPhone, FiMessageSquare, FiShare, FiSettings, FiUserPlus } from 'react-icons/fi';
+import { FiVideo, FiVideoOff, FiMic, FiMicOff, FiShare, FiMaximize, FiMinimize, FiUserPlus, FiSettings, FiPhone } from 'react-icons/fi';
 
-const VideoChat = ({ socket, roomId, userId, messages, sendMessage, leaveRoom, showChat, toggleChat }) => {
+const VideoChat = ({ socket, roomId, messages, leaveRoom }) => {
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [peerConnections, setPeerConnections] = useState({});
   const [streams, setStreams] = useState({});
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [inputMessage, setInputMessage] = useState('');
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [participants, setParticipants] = useState([]);
   const [showSettings, setShowSettings] = useState(false);
+  const [devices, setDevices] = useState({ cameras: [], microphones: [], speakers: [] });
+  const [selectedDevices, setSelectedDevices] = useState({ camera: '', microphone: '', speaker: '' });
   const localVideoRef = useRef(null);
   const chatContainerRef = useRef(null);
 
   useEffect(() => {
-    const initializePeerConnection = async (peerId) => {
+    const initializeLocalStream = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        localVideoRef.current.srcObject = stream;
+        return stream;
+      } catch (error) {
+        console.error('Error accessing media devices.', error);
+      }
+    };
+
+    const initializePeerConnection = async (peerId, localStream) => {
       const pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
       });
 
       pc.onicecandidate = (event) => {
@@ -28,69 +42,89 @@ const VideoChat = ({ socket, roomId, userId, messages, sendMessage, leaveRoom, s
       };
 
       pc.ontrack = (event) => {
-        setStreams(prev => ({
-          ...prev,
-          [peerId]: event.streams[0]
-        }));
+        setStreams((prev) => ({ ...prev, [peerId]: event.streams[0] }));
       };
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
+      return pc;
+    };
 
-      setPeerConnections(prev => ({
+    const handleUserJoined = async ({ userId: peerId, userType: peerType, userName: peerName }) => {
+      const localStream = await initializeLocalStream();
+      const pc = await initializePeerConnection(peerId, localStream);
+
+      setPeerConnections((prev) => ({
         ...prev,
-        [peerId]: pc
+        [peerId]: pc,
       }));
+
+      setParticipants((prev) => [...prev, { id: peerId, type: peerType, name: peerName }]);
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       socket.emit('offer', { roomId, offer, to: peerId });
     };
 
-    socket.on('user_joined', ({ userId: peerId, userName }) => {
-      initializePeerConnection(peerId);
-      setParticipants(prev => [...prev, { id: peerId, name: userName }]);
-    });
+    const handleOffer = async ({ offer, from }) => {
+      const localStream = await initializeLocalStream();
+      const pc = await initializePeerConnection(from, localStream);
 
-    socket.on('offer', async ({ offer, from }) => {
-      const pc = peerConnections[from];
-      if (pc) {
-        await pc.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket.emit('answer', { roomId, answer, to: from });
-      }
-    });
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit('answer', { roomId, answer, to: from });
 
-    socket.on('answer', async ({ answer, from }) => {
+      setPeerConnections((prev) => ({
+        ...prev,
+        [from]: pc,
+      }));
+    };
+
+    const handleAnswer = async ({ answer, from }) => {
       const pc = peerConnections[from];
       if (pc) {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
       }
-    });
+    };
 
-    socket.on('ice_candidate', async ({ candidate, from }) => {
+    const handleIceCandidate = async ({ candidate, from }) => {
       const pc = peerConnections[from];
       if (pc) {
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       }
-    });
+    };
 
-    socket.on('user_left', ({ userId: peerId }) => {
-      setStreams(prev => {
-        const newStreams = { ...prev };
-        delete newStreams[peerId];
-        return newStreams;
-      });
-      setParticipants(prev => prev.filter(p => p.id !== peerId));
-    });
+    const handleUserLeft = ({ userId: peerId }) => {
+      const pc = peerConnections[peerId];
+      if (pc) {
+        pc.close();
+        setPeerConnections((prev) => {
+          const updated = { ...prev };
+          delete updated[peerId];
+          return updated;
+        });
+        setStreams((prev) => {
+          const updated = { ...prev };
+          delete updated[peerId];
+          return updated;
+        });
+        setParticipants((prev) => prev.filter((p) => p.id !== peerId));
+      }
+    };
+
+    socket.on('user_joined', handleUserJoined);
+    socket.on('offer', handleOffer);
+    socket.on('answer', handleAnswer);
+    socket.on('ice_candidate', handleIceCandidate);
+    socket.on('user_left', handleUserLeft);
 
     return () => {
-      Object.values(peerConnections).forEach(pc => pc.close());
+      socket.off('user_joined', handleUserJoined);
+      socket.off('offer', handleOffer);
+      socket.off('answer', handleAnswer);
+      socket.off('ice_candidate', handleIceCandidate);
+      socket.off('user_left', handleUserLeft);
     };
   }, [socket, roomId, peerConnections]);
 
@@ -99,6 +133,18 @@ const VideoChat = ({ socket, roomId, userId, messages, sendMessage, leaveRoom, s
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    const getDevices = async () => {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter((device) => device.kind === 'videoinput');
+      const microphones = devices.filter((device) => device.kind === 'audioinput');
+      const speakers = devices.filter((device) => device.kind === 'audiooutput');
+      setDevices({ cameras, microphones, speakers });
+    };
+
+    getDevices();
+  }, []);
 
   const toggleVideo = () => {
     const videoTrack = localVideoRef.current.srcObject.getVideoTracks()[0];
@@ -126,49 +172,62 @@ const VideoChat = ({ socket, roomId, userId, messages, sendMessage, leaveRoom, s
   const toggleScreenShare = async () => {
     if (!isScreenSharing) {
       try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const videoTrack = screenStream.getVideoTracks()[0];
-        
-        Object.values(peerConnections).forEach(pc => {
-          const sender = pc.getSenders().find(s => s.track.kind === 'video');
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const videoTrack = stream.getVideoTracks()[0];
+        Object.values(peerConnections).forEach((pc) => {
+          const sender = pc.getSenders().find((s) => s.track.kind === 'video');
           sender.replaceTrack(videoTrack);
         });
-
-        localVideoRef.current.srcObject = screenStream;
-        setIsScreenSharing(true);
-
+        localVideoRef.current.srcObject = stream;
         videoTrack.onended = () => {
-          toggleScreenShare();
+          stopScreenSharing();
         };
+        setIsScreenSharing(true);
       } catch (error) {
-        console.error("Error sharing screen:", error);
+        console.error('Error sharing screen:', error);
       }
     } else {
-      const userStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const videoTrack = userStream.getVideoTracks()[0];
-
-      Object.values(peerConnections).forEach(pc => {
-        const sender = pc.getSenders().find(s => s.track.kind === 'video');
-        sender.replaceTrack(videoTrack);
-      });
-
-      localVideoRef.current.srcObject = userStream;
-      setIsScreenSharing(false);
+      stopScreenSharing();
     }
   };
 
-  const handleSendMessage = () => {
-    if (inputMessage.trim() !== '') {
-      sendMessage(inputMessage);
-      setInputMessage('');
-    }
+  const stopScreenSharing = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const videoTrack = stream.getVideoTracks()[0];
+    Object.values(peerConnections).forEach((pc) => {
+      const sender = pc.getSenders().find((s) => s.track.kind === 'video');
+      sender.replaceTrack(videoTrack);
+    });
+    localVideoRef.current.srcObject = stream;
+    setIsScreenSharing(false);
   };
 
   const inviteParticipant = () => {
     const inviteLink = `${window.location.origin}/join/${roomId}`;
     navigator.clipboard.writeText(inviteLink).then(() => {
-      alert("Invitation link copied to clipboard!");
+      alert('Invite link copied to clipboard');
     });
+  };
+
+  const handleDeviceChange = async (deviceType, deviceId) => {
+    try {
+      const constraints = {};
+      if (deviceType === 'video') {
+        constraints.video = { deviceId: { exact: deviceId } };
+      } else if (deviceType === 'audio') {
+        constraints.audio = { deviceId: { exact: deviceId } };
+      }
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const track = stream.getTracks()[0];
+      Object.values(peerConnections).forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track.kind === track.kind);
+        sender.replaceTrack(track);
+      });
+      localVideoRef.current.srcObject = stream;
+      setSelectedDevices((prev) => ({ ...prev, [deviceType]: deviceId }));
+    } catch (error) {
+      console.error('Error changing device:', error);
+    }
   };
 
   const Tooltip = ({ children, content }) => (
@@ -197,12 +256,14 @@ const VideoChat = ({ socket, roomId, userId, messages, sendMessage, leaveRoom, s
         {Object.entries(streams).map(([peerId, stream]) => (
           <div key={peerId} className="relative">
             <video
-              ref={el => { if (el) el.srcObject = stream; }}
+              ref={(el) => {
+                if (el) el.srcObject = stream;
+              }}
               autoPlay
               className="w-full h-full object-cover rounded-lg shadow-lg"
             />
             <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 text-xs rounded-full">
-              {participants.find(p => p.id === peerId)?.name || 'Peer'}
+              {participants.find((p) => p.id === peerId)?.name || 'Peer'}
             </div>
           </div>
         ))}
@@ -243,105 +304,82 @@ const VideoChat = ({ socket, roomId, userId, messages, sendMessage, leaveRoom, s
             <FiPhone size={20} />
           </button>
         </Tooltip>
-        <Tooltip content={showChat ? 'Hide chat' : 'Show chat'}>
-          <button onClick={toggleChat} className="p-3 rounded-full bg-blue-500 text-white transition duration-300">
-            <FiMessageSquare size={20} />
-          </button>
-        </Tooltip>
       </div>
-      {showChat && (
-        <div className="absolute top-0 right-0 w-full sm:w-1/3 lg:w-1/4 h-full bg-white border-l border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold">Chat</h2>
-          </div>
-          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((msg, index) => (
-              <div key={index} className={`flex ${msg.sender.id === userId ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs px-4 py-2 rounded-lg ${msg.sender.id === userId ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-6 h-6 rounded-full overflow-hidden">
-                      <img src={msg.sender.avatar || '/default-avatar.png'} alt={msg.sender.name} className="w-full h-full object-cover" />
-                    </div>
-                    <p className="text-xs font-medium">{msg.sender.name || `${msg.sender.type} ${msg.sender.id}`}</p>
-                  </div>
-                  <p className="text-sm">{msg.message}</p>
+     
+        {showSettings && (
+          <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h2 className="text-2xl font-bold mb-4">Settings</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Select Camera</label>
+                  <select
+                    value={selectedDevices.camera}
+                    onChange={(e) => handleDeviceChange('video', e.target.value)}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  >
+                    {devices.cameras.map((camera) => (
+                      <option key={camera.deviceId} value={camera.deviceId}>
+                        {camera.label || `Camera ${camera.deviceId.substr(0, 5)}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Select Microphone</label>
+                  <select
+                    value={selectedDevices.microphone}
+                    onChange={(e) => handleDeviceChange('audio', e.target.value)}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  >
+                    {devices.microphones.map((microphone) => (
+                      <option key={microphone.deviceId} value={microphone.deviceId}>
+                        {microphone.label || `Microphone ${microphone.deviceId.substr(0, 5)}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Select Speaker</label>
+                  <select
+                    value={selectedDevices.speaker}
+                    onChange={(e) => handleDeviceChange('audiooutput', e.target.value)}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  >
+                    {devices.speakers.map((speaker) => (
+                      <option key={speaker.deviceId} value={speaker.deviceId}>
+                        {speaker.label || `Speaker ${speaker.deviceId.substr(0, 5)}`}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            ))}
-          </div>
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Type a message..."
-              />
-              <button onClick={handleSendMessage} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
-                <FiSend size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showSettings && (
-        <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold mb-4">Settings</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Select Camera</label>
-                <select className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                  <option>Camera 1</option>
-                  <option>Camera 2</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Select Microphone</label>
-                <select className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                  <option>Microphone 1</option>
-                  <option>Microphone 2</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Select Speaker</label>
-                <select className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                  <option>Speaker 1</option>
-                  <option>Speaker 2</option>
-                </select>
+              <div className="mt-6 flex justify-end">
+                <button onClick={() => setShowSettings(false)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
+                  Close
+                </button>
               </div>
             </div>
-            <div className="mt-6 flex justify-end">
-              <button onClick={() => setShowSettings(false)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
-                Close
-              </button>
-            </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
-VideoChat.propTypes = {
-  socket: PropTypes.object.isRequired,
-  roomId: PropTypes.string.isRequired,
-  userId: PropTypes.string.isRequired,
-  messages: PropTypes.arrayOf(PropTypes.shape({
-    message: PropTypes.string.isRequired,
-    sender: PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      type: PropTypes.string.isRequired,
-      name: PropTypes.string,
-      avatar: PropTypes.string,
-    }).isRequired,
-  })).isRequired,
-  sendMessage: PropTypes.func.isRequired,
-  leaveRoom: PropTypes.func.isRequired,
-  showChat: PropTypes.bool.isRequired,
-  toggleChat: PropTypes.func.isRequired,
-};
+  VideoChat.propTypes = {
+    socket: PropTypes.object.isRequired,
+    roomId: PropTypes.string.isRequired,
+    userId: PropTypes.string.isRequired,
+    messages: PropTypes.arrayOf(PropTypes.shape({
+      message: PropTypes.string.isRequired,
+      sender: PropTypes.shape({
+        id: PropTypes.string.isRequired,
+      }).isRequired,
+    })).isRequired,
+    sendMessage: PropTypes.func.isRequired,
+    leaveRoom: PropTypes.func.isRequired,
+    showChat: PropTypes.bool.isRequired,
+    toggleChat: PropTypes.func.isRequired,
+  };
 
-export default VideoChat;
+  export default VideoChat;

@@ -56,19 +56,19 @@ const CounselorWelcomePage = () => {
       const specialtiesInLowerCase = selectedSpecialties.map(specialty =>
         specialty.toLowerCase()
       );
-  
+
       // Send the request to update specialties
       const response = await updateSpecialties({ specialties: specialtiesInLowerCase });
-  
+
       if (response && response.message === "Specialties updated successfully") {
         console.log("Specialties updated:", response.counselor.specialties);
-  
+
         // Simulate setup process
         for (let i = 0; i <= 100; i += 20) {
           await new Promise(resolve => setTimeout(resolve, 500));
           setSetupProgress(i);
         }
-  
+
         navigate("/counselor/setup");
       } else {
         setErrorMessage("Failed to update specialties. Please try again.");
@@ -78,7 +78,7 @@ const CounselorWelcomePage = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };  
+  };
 
   if (isSubmitting) {
     return (
@@ -110,12 +110,13 @@ const CounselorWelcomePage = () => {
             {stage < welcomeMessages.length - 1 ? (
               <motion.div
                 key={stage}
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0, y:  50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -50 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="text-center">
-                <h2 className="text-4xl font-bold text-blue-400">
+                className="text-center"
+              >
+                <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-blue-400">
                   {welcomeMessages[stage]}
                 </h2>
               </motion.div>
@@ -123,51 +124,53 @@ const CounselorWelcomePage = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}>
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              >
+                <h2 className="mt-6 text-center text-2xl sm:text-xl md:text-5xl font-extrabold text-gray-900">
                   Select Your Areas of Expertise
                 </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                  Choose the areas you specialize in. This will help us match
-                  you with students who need your expertise.
+                <p className="mt-2 text-center text-sm sm:text-base md:text-lg text-gray-600">
+                  Choose the areas you specialize in. This will help us match you with students who need your expertise.
                 </p>
                 {errorMessage && (
                   <p className="text-red-500 text-center mt-4">
                     {errorMessage}
                   </p>
                 )}
-                <div className="mt-8 space-y-6">
+                <div className="mt-8 space-y-4 sm:space-y-6 md:space-y-8">
                   <div className="flex flex-wrap gap-3 justify-center">
                     {specialties.map((specialty) => (
                       <motion.button
                         key={specialty.name}
-                        className={`px-4 py-2 rounded-full transition-all duration-300 ease-in-out ${
-                          selectedSpecialties.includes(specialty.name)
-                            ? `${specialty.color} text-white shadow-lg`
-                            : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                        }`}
+                        className={`px-3 sm:px-4 py-2 sm:py-3 rounded-full transition-all duration-300 ease-in-out ${selectedSpecialties.includes(specialty.name)
+                            ? `${specialty.color} text-white shadow-lg transform scale-105`
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          } text-xs sm:text-sm md:text-base border border-transparent hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500`}
                         onClick={() => toggleSpecialty(specialty.name)}
                         whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}>
+                        whileTap={{ scale: 0.95 }}
+                      >
                         {specialty.name}
                       </motion.button>
                     ))}
                   </div>
-                  <div className="flex justify-between items-center pt-4">
+                  <div className="flex justify-between items-center pt-4 sm:pt-6 md:pt-8">
                     <motion.button
                       type="button"
-                      className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-300"
+                      className="px-4 sm:px-6 py-2 sm:py-3 border border-transparent text-sm sm:text-base md:text-lg font-medium rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-300"
                       onClick={() => setSelectedSpecialties([])}
                       whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}>
+                      whileTap={{ scale: 0.95 }}
+                    >
                       Reset
                     </motion.button>
                     <motion.button
                       type="button"
-                      className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300"
+                      className="px-4 sm:px-6 py-2 sm:py-3 border border-transparent text-sm sm:text-base md:text-lg font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-300"
                       onClick={handleSubmit}
                       whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}>
+                      whileTap={{ scale: 0.95 }}
+                    >
                       Submit
                     </motion.button>
                   </div>
