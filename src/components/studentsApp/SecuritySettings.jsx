@@ -1,44 +1,44 @@
-import { useState, useEffect } from 'react';
+// import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 function SecuritySettings() {
-    const [isPinSet, setIsPinSet] = useState(false);
-    const [isChangingPin, setIsChangingPin] = useState(false);
-    const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    // const [isPinSet, setIsPinSet] = useState(false);
+    // const [isChangingPin, setIsChangingPin] = useState(false);
+    // const [error, setError] = useState('');
+    // const [successMessage, setSuccessMessage] = useState('');
 
-    useEffect(() => {
-        const userPin = localStorage.getItem('userPin');
-        setIsPinSet(!!userPin);
-    }, []);
+    // useEffect(() => {
+    //     const userPin = localStorage.getItem('userPin');
+    //     setIsPinSet(!!userPin);
+    // }, []);
 
-    const handlePinChange = (event) => {
-        event.preventDefault();
-        setError('');
-        setSuccessMessage('');
+    // const handlePinChange = (event) => {
+    //     event.preventDefault();
+    //     setError('');
+    //     setSuccessMessage('');
 
-        const oldPin = event.target.oldPin?.value;
-        const newPin = event.target.newPin.value;
+    //     const oldPin = event.target.oldPin?.value;
+    //     const newPin = event.target.newPin.value;
 
-        if (isPinSet) {
-            const storedPin = localStorage.getItem('userPin');
-            if (oldPin !== storedPin) {
-                setError('Incorrect PIN');
-                return;
-            }
-        }
+    //     if (isPinSet) {
+    //         const storedPin = localStorage.getItem('userPin');
+    //         if (oldPin !== storedPin) {
+    //             setError('Incorrect PIN');
+    //             return;
+    //         }
+    //     }
 
-        localStorage.setItem('userPin', newPin);
-        setIsPinSet(true);
-        setIsChangingPin(false);
-        setSuccessMessage('PIN successfully ' + (isPinSet ? 'changed' : 'set'));
-    };
+    //     localStorage.setItem('userPin', newPin);
+    //     setIsPinSet(true);
+    //     setIsChangingPin(false);
+    //     setSuccessMessage('PIN successfully ' + (isPinSet ? 'changed' : 'set'));
+    // };
 
-    const handleForgotPin = () => {
-        // Here you would trigger the "Reset via Email" process
-        // For now, we'll just log a message
-        console.log("Trigger reset PIN via email process");
-    };
+    // const handleForgotPin = () => {
+    //     // Here you would trigger the "Reset via Email" process
+    //     // For now, we'll just log a message
+    //     console.log("Trigger reset PIN via email process");
+    // };
 
     return (
         <section className="mb-8">
@@ -53,7 +53,7 @@ function SecuritySettings() {
                     </div>
                 </form>
             </div>
-            <div>
+            {/* <div>
                 <h3 className="text-xl font-bold mb-2">
                     {isPinSet ? 'Change Secret PIN' : 'Set Secret PIN'}
                 </h3>
@@ -89,7 +89,7 @@ function SecuritySettings() {
                         </button>
                     </div>
                 )}
-            </div>
+            </div> */}
         </section>
     );
 }

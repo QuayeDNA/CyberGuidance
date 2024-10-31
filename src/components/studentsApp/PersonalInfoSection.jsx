@@ -60,7 +60,7 @@ function PersonalInfoSection() {
                 {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
               </span>
               {key === 'profilePicture' ? (
-                <img src={value} alt="Profile" className="mt-2 rounded-full shadow-md" />
+                <img src={value} alt="Profile" className="mt-2 w-32 h-auto shadow-md" />
               ) : (
                 <p>{value}</p>
               )}

@@ -9,7 +9,7 @@ const MessagingComponent = () => {
   const [appointments, setAppointments] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const isPinSet = !!localStorage.getItem("userPin");
+  // const isPinSet = !!localStorage.getItem("userPin");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,7 +56,7 @@ const MessagingComponent = () => {
 
   return (
     <div className="flex flex-col justify-center items-center">
-      {!isPinSet && (
+      {/* {!isPinSet && (
         <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
           <p className="font-bold">Reminder</p>
           <p>
@@ -64,7 +64,7 @@ const MessagingComponent = () => {
             your PIN.
           </p>
         </div>
-      )}
+      )} */}
 <div className="w-[100vw]">
       <CommunicationSystem
         userToken={token}

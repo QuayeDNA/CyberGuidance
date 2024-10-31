@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaSpinner } from 'react-icons/fa';
 
 const PersonalizationSettings = () => {
@@ -6,6 +6,36 @@ const PersonalizationSettings = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+
+    // Add useEffect to fetch initial data and set loading state
+    useEffect(() => {
+        const fetchUserPreferences = async () => {
+            try {
+                const response = await fetch('https://cyber-guidance.onrender.com/area-of-interest', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user preferences');
+                }
+
+                const data = await response.json();
+                if (data.areaOfInterest) {
+                    setSelectedIssues(data.areaOfInterest);
+                }
+            } catch (error) {
+                console.error('Error fetching user preferences:', error);
+                setErrorMessage('Failed to load user preferences');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchUserPreferences();
+    }, []);
 
     const issues = [
         { name: 'Depression', color: 'bg-blue-400' },
@@ -66,13 +96,12 @@ const PersonalizationSettings = () => {
 
             const data = await response.json();
             console.log(data.message);
-            // You might want to show a success message to the user here
+            // Optional: Add success message state and display it to the user
         } catch (error) {
             console.error('Error updating area of interest:', error);
             setErrorMessage('Failed to update area of interest. Please try again.');
         } finally {
             setIsSubmitting(false);
-            setIsLoading(false);
         }
     };
 
@@ -115,7 +144,7 @@ const PersonalizationSettings = () => {
                 <div>
                     <h3 className="text-lg font-semibold mb-2">Areas of Interest</h3>
                     <p className="text-sm text-gray-600 mb-4">Select the topics you&apos;d like to focus on:</p>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-3 overflow-auto max-h-40">
                         {issues.map((issue) => (
                             <button
                                 key={issue.name}
